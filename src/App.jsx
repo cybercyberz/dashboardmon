@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, Redirect, Route, Router, Switch, useLocation } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
 
 // =====================================================================
 // KONSTANTA UNIT ORGANISASI (Permen PU 1/2024)
@@ -206,26 +208,49 @@ const ROLES = [
 ];
 const ROLE_LABEL = Object.fromEntries(ROLES.map((r) => [r.kode, r.label]));
 
-const PILL_COLOR_CLASSES = {
-  blue: "bg-blue-100 text-blue-800 border border-blue-200",
-  amber: "bg-amber-100 text-amber-800 border border-amber-200",
-  purple: "bg-purple-100 text-purple-800 border border-purple-200",
-  teal: "bg-teal-100 text-teal-800 border border-teal-200",
-  green: "bg-green-100 text-green-800 border border-green-200",
-  red: "bg-red-100 text-red-800 border border-red-200",
-  gray: "bg-slate-100 text-slate-700 border border-slate-200",
-};
-
-const BAR_COLOR_CLASSES = {
-  blue: "bg-blue-500",
-  amber: "bg-amber-500",
-  purple: "bg-purple-500",
-  teal: "bg-teal-500",
+// Single source of truth for status color treatment — pill badge + bar-chart fill —
+// keyed by the same color name used throughout POSISI_BOLA_LIST/STATUS_VALIDASI_LIST.
+// dark: variants are baked in now so step 4 (dark mode) needs no changes here.
+const STATUS_TONE = {
+  blue: {
+    pill: "bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
+    bar: "bg-blue-500 dark:bg-blue-400",
+  },
+  amber: {
+    pill: "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800",
+    bar: "bg-amber-500 dark:bg-amber-400",
+  },
+  purple: {
+    pill: "bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-900/40 dark:text-purple-300 dark:border-purple-800",
+    bar: "bg-purple-500 dark:bg-purple-400",
+  },
+  teal: {
+    pill: "bg-teal-100 text-teal-800 border border-teal-200 dark:bg-teal-900/40 dark:text-teal-300 dark:border-teal-800",
+    bar: "bg-teal-500 dark:bg-teal-400",
+  },
+  green: {
+    pill: "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-800",
+    bar: "bg-green-500 dark:bg-green-400",
+  },
+  red: {
+    pill: "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800",
+    bar: "bg-red-500 dark:bg-red-400",
+  },
+  gray: {
+    pill: "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+    bar: "bg-slate-500 dark:bg-slate-400",
+  },
 };
 
 // Shared visible-focus treatment for every interactive element (buttons, links,
 // keyboard-activatable rows/headers) — the app had zero focus indicators before this.
-const FOCUS_RING = "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500";
+const FOCUS_RING =
+  "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 dark:ring-offset-slate-900";
+
+// Shared card-surface treatment, factored out of the 17 duplicated call sites below so
+// dark mode (step 4) only needs to touch this one constant instead of every site.
+const CARD_BASE = "rounded-lg border bg-white shadow-sm dark:bg-slate-800";
+const CARD_SURFACE = `${CARD_BASE} border-slate-200 dark:border-slate-700`;
 
 // =====================================================================
 // FUNGSI BANTU MURNI (tanpa React) — tanggal, durasi, dan aturan transisi
@@ -278,6 +303,17 @@ function getDocCompleteness(dokumenList, usulanKode, putaran, tahapSaatIni) {
     ),
   ).length;
   return { masuk, total: required.length };
+}
+
+// Shared by ProposalTable's desktop <table> rows and mobile card rows so the two
+// layouts never compute overdue/umur/dokumen status differently.
+function getProposalRowFields(u, dokumenList, today) {
+  const tahap = TAHAP_BY_KODE[u.tahapSaatIni];
+  const posisi = POSISI_BOLA_BY_KODE[u.posisiBola];
+  const overdue = isOverdue(u, today);
+  const umur = getStageAgeDays(u, today);
+  const { masuk, total } = getDocCompleteness(dokumenList, u.kode, u.putaran, u.tahapSaatIni);
+  return { tahap, posisi, overdue, umur, masuk, total };
 }
 
 // Tabel aturan transisi tahap — satu-satunya sumber kebenaran untuk tombol aksi yang boleh
@@ -719,10 +755,172 @@ const initialLogs = [
 // KOMPONEN PRESENTASI
 // =====================================================================
 
+// Shared input treatment for every text input, select, and textarea.
+const INPUT_BASE = `w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${FOCUS_RING}`;
+
+const BUTTON_VARIANT_CLASSES = {
+  secondary:
+    "rounded border border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700",
+  primary: "rounded bg-blue-600 font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600",
+  success: "rounded bg-green-600 font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600",
+  ghost: "rounded text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
+  link: "rounded text-sm text-blue-600 hover:underline dark:text-blue-400",
+};
+
+function Button({ variant = "secondary", size = "sm", className = "", type = "button", children, ...rest }) {
+  const sizeClasses = variant === "link" ? "" : size === "md" ? "px-4 py-2 text-sm" : "px-3 py-1.5 text-sm";
+  return (
+    <button
+      type={type}
+      className={`${sizeClasses} ${BUTTON_VARIANT_CLASSES[variant]} ${FOCUS_RING} ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+// Underline-indicator tab button, shared by FormulirPage's tabs and the header nav.
+function TabButton({ active, className = "", children, ...rest }) {
+  return (
+    <button
+      type="button"
+      className={`border-b-2 px-3 py-2 text-sm font-medium ${FOCUS_RING} ${
+        active
+          ? "border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-400"
+          : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+      } ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Card({ as: Tag = "div", className = "", children, ...rest }) {
+  return (
+    <Tag className={`${CARD_SURFACE} ${className}`} {...rest}>
+      {children}
+    </Tag>
+  );
+}
+
+function FormField({ id, label, children }) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+        {label}
+      </label>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function Input({ id, className = "", ...rest }) {
+  return <input id={id} className={`${INPUT_BASE} ${className}`} {...rest} />;
+}
+
+function Select({ id, className = "", children, ...rest }) {
+  return (
+    <select id={id} className={`${INPUT_BASE} ${className}`} {...rest}>
+      {children}
+    </select>
+  );
+}
+
+function Textarea({ id, className = "", ...rest }) {
+  return <textarea id={id} className={`${INPUT_BASE} ${className}`} {...rest} />;
+}
+
+function FormFeedback({ feedback }) {
+  if (!feedback) return null;
+  return (
+    <div
+      role="alert"
+      aria-live={feedback.type === "error" ? "assertive" : "polite"}
+      className={
+        feedback.type === "error"
+          ? "rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
+          : "rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300"
+      }
+    >
+      {feedback.text}
+    </div>
+  );
+}
+
+function EmptyState({ colSpan, message }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+        {message}
+      </td>
+    </tr>
+  );
+}
+
+// Minimal dependency-free modal: focus trap, Escape-to-close, focus-return-to-trigger.
+// Used only for the T8 -> SELESAI transition, the one irreversible action in the app.
+function Modal({ open, onClose, title, children }) {
+  const dialogRef = useRef(null);
+  const previouslyFocusedRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    previouslyFocusedRef.current = document.activeElement;
+    const dialogEl = dialogRef.current;
+    const focusable = dialogEl
+      ? Array.from(dialogEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+      : [];
+    focusable[0]?.focus();
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocusedRef.current?.focus?.();
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="modal-title" className={`w-full max-w-md ${CARD_SURFACE} p-4`}>
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <h3 id="modal-title" className="text-base font-semibold text-slate-800 dark:text-slate-100">
+            {title}
+          </h3>
+          <Button variant="ghost" className="!p-1 leading-none" aria-label="Tutup dialog" onClick={onClose}>
+            <span aria-hidden="true">&times;</span>
+          </Button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function Pill({ children, color = "gray" }) {
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${PILL_COLOR_CLASSES[color]}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_TONE[color].pill}`}
     >
       {children}
     </span>
@@ -731,13 +929,13 @@ function Pill({ children, color = "gray" }) {
 
 function SummaryCard({ label, value, tone = "default" }) {
   const toneClasses = {
-    default: "border-slate-200 text-slate-900",
-    danger: "border-red-200 text-red-700",
-    success: "border-green-200 text-green-700",
+    default: "border-slate-200 text-slate-900 dark:border-slate-700 dark:text-slate-100",
+    danger: "border-red-200 text-red-700 dark:border-red-800 dark:text-red-400",
+    success: "border-green-200 text-green-700 dark:border-green-800 dark:text-green-400",
   }[tone];
   return (
-    <div className={`rounded-lg border bg-white p-4 shadow-sm ${toneClasses}`}>
-      <div className="text-sm font-medium text-slate-500">{label}</div>
+    <div className={`${CARD_BASE} p-4 ${toneClasses}`}>
+      <div className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</div>
       <div className="mt-1 text-3xl font-semibold">{value}</div>
     </div>
   );
@@ -746,50 +944,50 @@ function SummaryCard({ label, value, tone = "default" }) {
 function StageBarChart({ data }) {
   const max = Math.max(1, ...data.map((d) => d.count));
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="mb-4 text-base font-semibold text-slate-800">Jumlah Usulan per Tahap</h3>
+    <Card className="p-4">
+      <h3 className="mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">Jumlah Usulan per Tahap</h3>
       <div className="space-y-2">
         {data.map((d) => (
           <div key={d.tahapKode} className="flex items-center gap-3">
-            <div className="w-8 shrink-0 text-xs font-medium text-slate-500">{d.tahapKode}</div>
+            <div className="w-8 shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{d.tahapKode}</div>
             <div className="flex-1">
-              <div className="h-5 w-full overflow-hidden rounded bg-slate-100">
+              <div className="h-5 w-full overflow-hidden rounded bg-slate-100 dark:bg-slate-700">
                 <div
-                  className={`h-full ${BAR_COLOR_CLASSES[POSISI_BOLA_BY_KODE[d.posisiBola].color]} transition-all`}
+                  className={`h-full ${STATUS_TONE[POSISI_BOLA_BY_KODE[d.posisiBola].color].bar} transition-all motion-reduce:transition-none`}
                   style={{ width: `${(d.count / max) * 100}%` }}
                 />
               </div>
             </div>
-            <div className="w-6 shrink-0 text-right text-sm font-semibold text-slate-700">{d.count}</div>
-            <div className="w-56 shrink-0 truncate text-xs text-slate-500" title={d.label}>
+            <div className="w-6 shrink-0 text-right text-sm font-semibold text-slate-700 dark:text-slate-300">{d.count}</div>
+            <div className="w-56 shrink-0 truncate text-xs text-slate-500 dark:text-slate-400" title={d.label}>
               {d.label}
             </div>
           </div>
         ))}
       </div>
-      <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-100 pt-3">
+      <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-100 pt-3 dark:border-slate-700">
         {POSISI_BOLA_LIST.map((p) => (
-          <div key={p.kode} className="flex items-center gap-1.5 text-xs text-slate-600">
-            <span className={`h-2.5 w-2.5 rounded-sm ${BAR_COLOR_CLASSES[p.color]}`} />
+          <div key={p.kode} className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+            <span className={`h-2.5 w-2.5 rounded-sm ${STATUS_TONE[p.color].bar}`} />
             {p.label}
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
 function FilterBar({ filters, onChange }) {
   const handle = (field) => (e) => onChange({ ...filters, [field]: e.target.value });
   return (
-    <div className="print:hidden flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+    <Card className="print:hidden grid grid-cols-2 items-end gap-3 p-3 sm:grid-cols-4">
       <div>
-        <label htmlFor="filter-unor" className="block text-xs font-medium text-slate-500">
+        <label htmlFor="filter-unor" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
           Unit Organisasi
         </label>
         <select
           id="filter-unor"
-          className={`mt-1 rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
+          className={`mt-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${FOCUS_RING}`}
           value={filters.unorKode}
           onChange={handle("unorKode")}
         >
@@ -802,12 +1000,12 @@ function FilterBar({ filters, onChange }) {
         </select>
       </div>
       <div>
-        <label htmlFor="filter-tahap" className="block text-xs font-medium text-slate-500">
+        <label htmlFor="filter-tahap" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
           Tahap
         </label>
         <select
           id="filter-tahap"
-          className={`mt-1 rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
+          className={`mt-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${FOCUS_RING}`}
           value={filters.tahap}
           onChange={handle("tahap")}
         >
@@ -820,12 +1018,12 @@ function FilterBar({ filters, onChange }) {
         </select>
       </div>
       <div>
-        <label htmlFor="filter-jenis" className="block text-xs font-medium text-slate-500">
+        <label htmlFor="filter-jenis" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
           Jenis Perubahan
         </label>
         <select
           id="filter-jenis"
-          className={`mt-1 rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
+          className={`mt-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${FOCUS_RING}`}
           value={filters.jenisPerubahan}
           onChange={handle("jenisPerubahan")}
         >
@@ -838,12 +1036,12 @@ function FilterBar({ filters, onChange }) {
         </select>
       </div>
       <div>
-        <label htmlFor="filter-posisi" className="block text-xs font-medium text-slate-500">
+        <label htmlFor="filter-posisi" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
           Posisi Bola
         </label>
         <select
           id="filter-posisi"
-          className={`mt-1 rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
+          className={`mt-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${FOCUS_RING}`}
           value={filters.posisiBola}
           onChange={handle("posisiBola")}
         >
@@ -855,14 +1053,10 @@ function FilterBar({ filters, onChange }) {
           ))}
         </select>
       </div>
-      <button
-        type="button"
-        onClick={() => onChange({ unorKode: "", tahap: "", jenisPerubahan: "", posisiBola: "" })}
-        className={`rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 ${FOCUS_RING}`}
-      >
+      <Button onClick={() => onChange({ unorKode: "", tahap: "", jenisPerubahan: "", posisiBola: "" })}>
         Reset Filter
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }
 
@@ -874,7 +1068,7 @@ function SortHeader({ label, field, sort, onSortChange }) {
       role="button"
       tabIndex={0}
       aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
-      className={`cursor-pointer select-none px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-700 ${FOCUS_RING}`}
+      className={`cursor-pointer select-none px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 ${FOCUS_RING}`}
       onClick={handleActivate}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -884,106 +1078,172 @@ function SortHeader({ label, field, sort, onSortChange }) {
       }}
     >
       {label}{" "}
-      <span aria-hidden="true" className={active ? "text-slate-600" : "text-slate-300"}>
+      <span aria-hidden="true" className={active ? "text-slate-600 dark:text-slate-300" : "text-slate-300 dark:text-slate-600"}>
         {active ? (sort.direction === "asc" ? "▲" : "▼") : "↕"}
       </span>
     </th>
   );
 }
 
+function ProposalRowCard({ u, dokumenList, onSelect, today }) {
+  const { tahap, posisi, overdue, umur, masuk, total } = getProposalRowFields(u, dokumenList, today);
+  return (
+    <Card
+      as="div"
+      tabIndex={0}
+      role="button"
+      aria-label={`Buka detail usulan ${u.kode}`}
+      onClick={() => onSelect(u.kode)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(u.kode);
+        }
+      }}
+      className={`cursor-pointer p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 ${FOCUS_RING}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="font-medium text-slate-900 dark:text-slate-100">{u.kode}</div>
+          <div className="truncate text-xs text-slate-500 dark:text-slate-400" title={UNOR_BY_KODE[u.unorKode]?.nama}>
+            {u.unorKode} — {u.judul}
+          </div>
+        </div>
+        <Pill color={posisi.color}>{posisi.label}</Pill>
+      </div>
+      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
+        <div>
+          <dt className="text-xs text-slate-500 dark:text-slate-400">Jenis Perubahan</dt>
+          <dd className="text-slate-700 dark:text-slate-300">{JENIS_PERUBAHAN_LABEL[u.jenisPerubahan]}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-slate-500 dark:text-slate-400">Tahap</dt>
+          <dd className="text-slate-700 dark:text-slate-300">
+            {u.tahapSaatIni} — {tahap.label}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-slate-500 dark:text-slate-400">Putaran</dt>
+          <dd className="text-slate-700 dark:text-slate-300">{u.putaran}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-slate-500 dark:text-slate-400">Umur di Tahap</dt>
+          <dd className={overdue ? "font-semibold text-red-600 dark:text-red-400" : "text-slate-700 dark:text-slate-300"}>
+            {umur} hari
+            {overdue ? (
+              <>
+                {" "}
+                <span aria-hidden="true">⚠</span> Lewat Batas
+              </>
+            ) : null}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-slate-500 dark:text-slate-400">Dokumen</dt>
+          <dd className="text-slate-700 dark:text-slate-300">
+            {masuk}/{total} masuk
+          </dd>
+        </div>
+      </dl>
+    </Card>
+  );
+}
+
 function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, today }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
-          <tr>
-            <SortHeader label="Kode / Unit" field="kode" sort={sort} onSortChange={onSortChange} />
-            <SortHeader label="Jenis Perubahan" field="jenisPerubahan" sort={sort} onSortChange={onSortChange} />
-            <SortHeader label="Tahap" field="tahapSaatIni" sort={sort} onSortChange={onSortChange} />
-            <SortHeader label="Posisi Bola" field="posisiBola" sort={sort} onSortChange={onSortChange} />
-            <SortHeader label="Putaran" field="putaran" sort={sort} onSortChange={onSortChange} />
-            <SortHeader label="Umur di Tahap" field="umur" sort={sort} onSortChange={onSortChange} />
-            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Dokumen
-            </th>
-            <th className="px-2 py-2" aria-hidden="true"></th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200">
-          {usulanList.map((u) => {
-            const tahap = TAHAP_BY_KODE[u.tahapSaatIni];
-            const posisi = POSISI_BOLA_BY_KODE[u.posisiBola];
-            const overdue = isOverdue(u, today);
-            const umur = getStageAgeDays(u, today);
-            const { masuk, total } = getDocCompleteness(dokumenList, u.kode, u.putaran, u.tahapSaatIni);
-            return (
-              <tr
-                key={u.kode}
-                tabIndex={0}
-                role="button"
-                aria-label={`Buka detail usulan ${u.kode}`}
-                onClick={() => onSelect(u.kode)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelect(u.kode);
-                  }
-                }}
-                className={`group cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500`}
-              >
-                <td className="px-3 py-2.5">
-                  <div className="font-medium text-slate-900">{u.kode}</div>
-                  <div
-                    className="max-w-[220px] truncate text-xs text-slate-500"
-                    title={UNOR_BY_KODE[u.unorKode]?.nama}
-                  >
-                    {u.unorKode} — {u.judul}
-                  </div>
-                </td>
-                <td className="px-3 py-2.5 text-sm text-slate-700">{JENIS_PERUBAHAN_LABEL[u.jenisPerubahan]}</td>
-                <td className="px-3 py-2.5 text-sm text-slate-700">
-                  {u.tahapSaatIni} — {tahap.label}
-                </td>
-                <td className="px-3 py-2.5">
-                  <Pill color={posisi.color}>{posisi.label}</Pill>
-                </td>
-                <td className="px-3 py-2.5 text-center text-sm text-slate-700">{u.putaran}</td>
-                <td className="px-3 py-2.5 text-sm">
-                  <span className={overdue ? "font-semibold text-red-600" : "text-slate-700"}>
-                    {umur} hari
-                    {overdue ? (
-                      <>
-                        {" "}
-                        <span aria-hidden="true">⚠</span> Lewat Batas
-                      </>
-                    ) : null}
-                  </span>
-                </td>
-                <td className="px-3 py-2.5 text-sm text-slate-700">
-                  {masuk}/{total} masuk
-                </td>
-                <td className="px-2 py-2.5 text-slate-300 group-hover:text-slate-500 group-focus-visible:text-slate-500">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
-                    <path
-                      fillRule="evenodd"
-                      d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </td>
-              </tr>
-            );
-          })}
-          {usulanList.length === 0 && (
+    <>
+      <Card className="hidden overflow-x-auto sm:block">
+        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+          <thead className="bg-slate-50 dark:bg-slate-900/40">
             <tr>
-              <td colSpan={8} className="px-3 py-6 text-center text-sm text-slate-500">
-                Tidak ada usulan yang sesuai dengan filter.
-              </td>
+              <SortHeader label="Kode / Unit" field="kode" sort={sort} onSortChange={onSortChange} />
+              <SortHeader label="Jenis Perubahan" field="jenisPerubahan" sort={sort} onSortChange={onSortChange} />
+              <SortHeader label="Tahap" field="tahapSaatIni" sort={sort} onSortChange={onSortChange} />
+              <SortHeader label="Posisi Bola" field="posisiBola" sort={sort} onSortChange={onSortChange} />
+              <SortHeader label="Putaran" field="putaran" sort={sort} onSortChange={onSortChange} />
+              <SortHeader label="Umur di Tahap" field="umur" sort={sort} onSortChange={onSortChange} />
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Dokumen
+              </th>
+              <th className="px-2 py-2" aria-hidden="true"></th>
             </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            {usulanList.map((u) => {
+              const { tahap, posisi, overdue, umur, masuk, total } = getProposalRowFields(u, dokumenList, today);
+              return (
+                <tr
+                  key={u.kode}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Buka detail usulan ${u.kode}`}
+                  onClick={() => onSelect(u.kode)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(u.kode);
+                    }
+                  }}
+                  className={`group cursor-pointer hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-slate-700/50`}
+                >
+                  <td className="px-3 py-2.5">
+                    <div className="font-medium text-slate-900 dark:text-slate-100">{u.kode}</div>
+                    <div
+                      className="max-w-[220px] truncate text-xs text-slate-500 dark:text-slate-400"
+                      title={UNOR_BY_KODE[u.unorKode]?.nama}
+                    >
+                      {u.unorKode} — {u.judul}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">{JENIS_PERUBAHAN_LABEL[u.jenisPerubahan]}</td>
+                  <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">
+                    {u.tahapSaatIni} — {tahap.label}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <Pill color={posisi.color}>{posisi.label}</Pill>
+                  </td>
+                  <td className="px-3 py-2.5 text-center text-sm text-slate-700 dark:text-slate-300">{u.putaran}</td>
+                  <td className="px-3 py-2.5 text-sm">
+                    <span className={overdue ? "font-semibold text-red-600 dark:text-red-400" : "text-slate-700 dark:text-slate-300"}>
+                      {umur} hari
+                      {overdue ? (
+                        <>
+                          {" "}
+                          <span aria-hidden="true">⚠</span> Lewat Batas
+                        </>
+                      ) : null}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">
+                    {masuk}/{total} masuk
+                  </td>
+                  <td className="px-2 py-2.5 text-slate-300 group-hover:text-slate-500 group-focus-visible:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400 dark:group-focus-visible:text-slate-400">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                      <path
+                        fillRule="evenodd"
+                        d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </td>
+                </tr>
+              );
+            })}
+            {usulanList.length === 0 && <EmptyState colSpan={8} message="Tidak ada usulan yang sesuai dengan filter." />}
+          </tbody>
+        </table>
+      </Card>
+      <div className="space-y-3 sm:hidden">
+        {usulanList.map((u) => (
+          <ProposalRowCard key={u.kode} u={u} dokumenList={dokumenList} onSelect={onSelect} today={today} />
+        ))}
+        {usulanList.length === 0 && (
+          <Card className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            Tidak ada usulan yang sesuai dengan filter.
+          </Card>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -999,35 +1259,35 @@ function Timeline({ usulan, logs }) {
   return (
     <div className="space-y-4">
       {rounds.map((round) => (
-        <div key={round.putaran} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h4 className="mb-3 text-sm font-semibold text-slate-700">
+        <Card key={round.putaran} className="p-4">
+          <h4 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
             {round.putaran === 1 ? "Putaran ke-1 — Pengajuan Awal" : `Putaran ke-${round.putaran} — Pengajuan Ulang`}
           </h4>
-          <ol className="space-y-3 border-l-2 border-slate-200 pl-4">
+          <ol className="space-y-3 border-l-2 border-slate-200 pl-4 dark:border-slate-700">
             {round.putaran === 1 && (
               <li className="relative">
-                <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-400" />
-                <div className="text-xs text-slate-500">{formatTanggal(usulan.tanggalUsulanAwal)}</div>
-                <div className="text-sm font-medium text-slate-800">Usulan diterima</div>
+                <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-400 dark:bg-slate-500" />
+                <div className="text-xs text-slate-500 dark:text-slate-400">{formatTanggal(usulan.tanggalUsulanAwal)}</div>
+                <div className="text-sm font-medium text-slate-800 dark:text-slate-100">Usulan diterima</div>
               </li>
             )}
             {round.logs.map((log) => (
               <li key={log.id} className="relative">
-                <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-500" />
-                <div className="text-xs text-slate-500">{formatTanggal(log.tanggal)}</div>
-                <div className="text-sm font-medium text-slate-800">
+                <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-500 dark:bg-blue-400" />
+                <div className="text-xs text-slate-500 dark:text-slate-400">{formatTanggal(log.tanggal)}</div>
+                <div className="text-sm font-medium text-slate-800 dark:text-slate-100">
                   {TAHAP_BY_KODE[log.dariTahap]?.label ?? log.dariTahap} &rarr;{" "}
                   {log.keTahap === "SELESAI" ? "Selesai (Diundangkan)" : `${log.keTahap} — ${TAHAP_BY_KODE[log.keTahap]?.label}`}
                 </div>
-                <div className="text-sm text-slate-600">{log.keterangan}</div>
-                <div className="text-xs text-slate-500">oleh {log.olehSiapa}</div>
+                <div className="text-sm text-slate-600 dark:text-slate-300">{log.keterangan}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">oleh {log.olehSiapa}</div>
               </li>
             ))}
             {round.logs.length === 0 && round.putaran !== 1 && (
-              <li className="text-sm text-slate-500">Belum ada perpindahan tahap pada putaran ini.</li>
+              <li className="text-sm text-slate-500 dark:text-slate-400">Belum ada perpindahan tahap pada putaran ini.</li>
             )}
           </ol>
-        </div>
+        </Card>
       ))}
     </div>
   );
@@ -1040,47 +1300,61 @@ function DocumentTable({ dokumenList, usulanKode }) {
   return (
     <div className="space-y-4">
       {rounds.map((putaran) => (
-        <div key={putaran} className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">
+        <Card key={putaran} className="overflow-x-auto">
+          <div className="border-b border-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-300">
             Dokumen Putaran ke-{putaran}
           </div>
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/40">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Jenis Dokumen</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Versi</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tanggal Terima</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status Validasi</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Validator</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Catatan</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jenis Dokumen</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Versi</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tanggal Terima</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status Validasi</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Validator</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Catatan</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {dokumenList
                 .filter((d) => d.usulanKode === usulanKode && d.putaran === putaran)
                 .map((d) => {
                   const status = STATUS_VALIDASI_BY_KODE[d.statusValidasi];
                   return (
                     <tr key={d.id}>
-                      <td className="px-3 py-2.5 text-sm text-slate-700">{DOKUMEN_JENIS_LABEL[d.jenis]}</td>
-                      <td className="px-3 py-2.5 text-sm text-slate-700">v{d.versi}</td>
-                      <td className="px-3 py-2.5 text-sm text-slate-700">{formatTanggal(d.tanggalTerima)}</td>
+                      <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">{DOKUMEN_JENIS_LABEL[d.jenis]}</td>
+                      <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">v{d.versi}</td>
+                      <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">{formatTanggal(d.tanggalTerima)}</td>
                       <td className="px-3 py-2.5">
                         <Pill color={status.color}>{status.label}</Pill>
                       </td>
-                      <td className="px-3 py-2.5 text-sm text-slate-700">{d.validatorNama || "-"}</td>
-                      <td className="px-3 py-2.5 text-sm text-slate-600">{d.catatanValidasi || "-"}</td>
+                      <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">{d.validatorNama || "-"}</td>
+                      <td className="px-3 py-2.5 text-sm text-slate-600 dark:text-slate-400">{d.catatanValidasi || "-"}</td>
                     </tr>
                   );
                 })}
             </tbody>
           </table>
-        </div>
+        </Card>
       ))}
       {rounds.length === 0 && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm">
-          Belum ada dokumen tercatat untuk usulan ini.
-        </div>
+        <Card className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/40">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jenis Dokumen</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Versi</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tanggal Terima</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status Validasi</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Validator</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Catatan</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              <EmptyState colSpan={6} message="Belum ada dokumen tercatat untuk usulan ini." />
+            </tbody>
+          </table>
+        </Card>
       )}
     </div>
   );
@@ -1090,17 +1364,24 @@ function TransitionActions({ usulan, onTransition }) {
   const [openTo, setOpenTo] = useState(null);
   const [keterangan, setKeterangan] = useState("");
   const [error, setError] = useState("");
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   if (usulan.status !== "aktif") {
     return (
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
         Usulan ini sudah berstatus {usulan.status === "selesai" ? "selesai" : usulan.status} dan tidak dapat dipindahkan tahapnya lagi.
       </div>
     );
   }
 
   const options = TRANSITION_MAP[usulan.tahapSaatIni] || [];
-  const isTerminalOpen = openTo === "SELESAI";
+
+  const closeAll = () => {
+    setOpenTo(null);
+    setConfirmDialogOpen(false);
+    setKeterangan("");
+    setError("");
+  };
 
   const handleConfirm = (toTahap) => {
     const result = onTransition(toTahap, keterangan);
@@ -1108,30 +1389,47 @@ function TransitionActions({ usulan, onTransition }) {
       setError(result.error);
       return;
     }
-    setOpenTo(null);
-    setKeterangan("");
-    setError("");
+    closeAll();
   };
 
+  const keteranganField = (
+    <>
+      <label htmlFor="transition-keterangan" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+        Keterangan (wajib diisi, akan tercatat pada log)
+      </label>
+      <Textarea id="transition-keterangan" rows={2} value={keterangan} onChange={(e) => setKeterangan(e.target.value)} />
+      {error && (
+        <div role="alert" aria-live="assertive" className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </div>
+      )}
+    </>
+  );
+
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h4 className="mb-3 text-sm font-semibold text-slate-700">Pindahkan Tahap</h4>
+    <Card className="p-4">
+      <h4 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Pindahkan Tahap</h4>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const isTerminal = opt.toTahap === "SELESAI";
+          // isOpen is only ever true for non-terminal options: terminal clicks open the
+          // confirm Modal instead of toggling openTo, so the terminal button never shows
+          // this "active" (expanded) style.
           const isOpen = openTo === opt.toTahap;
-          const activeClasses = isTerminal
-            ? "border-green-600 bg-green-600 text-white"
-            : "border-blue-600 bg-blue-600 text-white";
+          const activeClasses = "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500";
           const inactiveClasses = isTerminal
-            ? "border-green-300 bg-green-50 text-green-800 hover:bg-green-100"
-            : "border-slate-300 text-slate-700 hover:bg-slate-50";
+            ? "border-green-300 bg-green-50 text-green-800 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/40"
+            : "border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700";
           return (
             <button
               key={opt.toTahap}
               type="button"
               onClick={() => {
-                setOpenTo(isOpen ? null : opt.toTahap);
+                if (isTerminal) {
+                  setConfirmDialogOpen(true);
+                } else {
+                  setOpenTo(isOpen ? null : opt.toTahap);
+                }
                 setError("");
               }}
               className={`rounded border px-3 py-1.5 text-sm font-medium ${FOCUS_RING} ${
@@ -1145,46 +1443,27 @@ function TransitionActions({ usulan, onTransition }) {
       </div>
       {openTo && (
         <div className="mt-3 space-y-2">
-          <label htmlFor="transition-keterangan" className="block text-xs font-medium text-slate-500">
-            Keterangan (wajib diisi, akan tercatat pada log)
-          </label>
-          <textarea
-            id="transition-keterangan"
-            className={`w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-            rows={2}
-            value={keterangan}
-            onChange={(e) => setKeterangan(e.target.value)}
-          />
-          {error && (
-            <div role="alert" aria-live="assertive" className="text-sm text-red-600">
-              {error}
-            </div>
-          )}
+          {keteranganField}
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => handleConfirm(openTo)}
-              className={`rounded px-3 py-1.5 text-sm font-medium text-white ${FOCUS_RING} ${
-                isTerminalOpen ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              {isTerminalOpen ? "Konfirmasi — Tindakan Tidak Dapat Dibatalkan" : "Konfirmasi"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOpenTo(null);
-                setKeterangan("");
-                setError("");
-              }}
-              className={`rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 ${FOCUS_RING}`}
-            >
-              Batal
-            </button>
+            <Button variant="primary" onClick={() => handleConfirm(openTo)}>
+              Konfirmasi
+            </Button>
+            <Button onClick={closeAll}>Batal</Button>
           </div>
         </div>
       )}
-    </div>
+      <Modal open={confirmDialogOpen} onClose={closeAll} title="Tetapkan dan Undangkan — Tindakan Tidak Dapat Dibatalkan">
+        <div className="space-y-2">
+          {keteranganField}
+          <div className="flex gap-2 pt-1">
+            <Button variant="success" onClick={() => handleConfirm("SELESAI")}>
+              Konfirmasi — Tindakan Tidak Dapat Dibatalkan
+            </Button>
+            <Button onClick={closeAll}>Batal</Button>
+          </div>
+        </div>
+      </Modal>
+    </Card>
   );
 }
 
@@ -1195,12 +1474,12 @@ function EselonIIMultiSelect({ eselonIKode, selected, onChange }) {
     else onChange([...selected, name]);
   };
   if (!eselonIKode) {
-    return <div className="text-sm text-slate-500">Pilih unit organisasi eselon I terlebih dahulu.</div>;
+    return <div className="text-sm text-slate-500 dark:text-slate-400">Pilih unit organisasi eselon I terlebih dahulu.</div>;
   }
   return (
-    <div className="max-h-48 space-y-1.5 overflow-y-auto rounded border border-slate-300 p-2">
+    <div className="max-h-48 space-y-1.5 overflow-y-auto rounded border border-slate-300 p-2 dark:border-slate-600">
       {unit.map((name) => (
-        <label key={name} className="flex items-start gap-2 text-sm text-slate-700">
+        <label key={name} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
             className="mt-0.5"
@@ -1218,7 +1497,7 @@ function RoleSwitcher({ role, onChange }) {
   return (
     <select
       aria-label="Ganti peran pengguna"
-      className={`rounded border border-slate-300 bg-white px-2 py-1.5 text-sm ${FOCUS_RING}`}
+      className={`rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${FOCUS_RING}`}
       value={role}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -1235,7 +1514,7 @@ function UnorUnitPicker({ unorKode, onChange }) {
   return (
     <select
       aria-label="Melihat sebagai unit organisasi"
-      className={`rounded border border-slate-300 bg-white px-2 py-1.5 text-sm ${FOCUS_RING}`}
+      className={`rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${FOCUS_RING}`}
       value={unorKode}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -1305,6 +1584,9 @@ function DasborPage({ usulanList, dokumenList, filters, onFilterChange, onSelect
 
   return (
     <div className="space-y-4">
+      <h2 id="page-heading" tabIndex={-1} className="text-lg font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
+        Dasbor
+      </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label="Usulan Aktif" value={summary.aktif} />
         <SummaryCard label="Menunggu Tindakan BKO" value={summary.menungguBKO} />
@@ -1336,58 +1618,62 @@ function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, can
 
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        onClick={onBack}
-        className={`print:hidden text-sm text-blue-600 hover:underline rounded ${FOCUS_RING}`}
-      >
+      <nav aria-label="Breadcrumb" className="print:hidden text-xs text-slate-500 dark:text-slate-400">
+        <Link href="/" className={`hover:underline dark:text-blue-400 text-blue-600 ${FOCUS_RING}`}>
+          Dasbor
+        </Link>{" "}
+        / {usulan.kode}
+      </nav>
+      <Button variant="link" className="print:hidden" onClick={onBack}>
         <span aria-hidden="true">&larr;</span> Kembali ke Dasbor
-      </button>
+      </Button>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <Card className="p-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <div className="text-xs font-medium text-slate-500">{usulan.kode}</div>
-            <h2 className="text-xl font-semibold text-slate-900">{usulan.judul}</h2>
-            <div className="mt-1 text-sm text-slate-500">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{usulan.kode}</div>
+            <h2 id="page-heading" tabIndex={-1} className="text-xl font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
+              {usulan.judul}
+            </h2>
+            <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Pengusul: {UNOR_BY_KODE[usulan.unorKode]?.nama} ({usulan.unorKode})
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
             <Pill color={posisi.color}>{posisi.label}</Pill>
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
               {usulan.tahapSaatIni} — {tahap.label} · Putaran ke-{usulan.putaran}
             </div>
             {usulan.status === "selesai" && <Pill color="green">Selesai</Pill>}
           </div>
         </div>
-        <div className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600">
-          <span className="font-medium text-slate-700">Catatan terakhir: </span>
+        <div className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+          <span className="font-medium text-slate-700 dark:text-slate-200">Catatan terakhir: </span>
           {usulan.catatanTerakhir}
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="mb-2 text-base font-semibold text-slate-800">Jenis Perubahan &amp; Unit Eselon II Terdampak</h3>
+      <Card className="p-4">
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Jenis Perubahan &amp; Unit Eselon II Terdampak</h3>
         <div className="mb-2">
           <Pill color="gray">{JENIS_PERUBAHAN_LABEL[usulan.jenisPerubahan]}</Pill>
         </div>
-        <ul className="list-inside list-disc text-sm text-slate-700">
+        <ul className="list-inside list-disc text-sm text-slate-700 dark:text-slate-300">
           {usulan.unitTerdampak.map((unit) => (
             <li key={unit}>{unit}</li>
           ))}
         </ul>
-      </div>
+      </Card>
 
       {canEdit && <TransitionActions usulan={usulan} onTransition={onTransition} />}
 
       <div>
-        <h3 className="mb-2 text-base font-semibold text-slate-800">Lini Masa</h3>
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Lini Masa</h3>
         <Timeline usulan={usulan} logs={usulanLogs} />
       </div>
 
       <div>
-        <h3 className="mb-2 text-base font-semibold text-slate-800">Dokumen</h3>
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Dokumen</h3>
         <DocumentTable dokumenList={dokumenList} usulanKode={usulan.kode} />
       </div>
     </div>
@@ -1417,29 +1703,13 @@ function TambahUsulanForm({ onAddUsulan }) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-xl space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-    >
-      <div>
-        <label htmlFor="tambah-judul" className="block text-xs font-medium text-slate-500">
-          Judul Usulan
-        </label>
-        <input
-          id="tambah-judul"
-          type="text"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={judul}
-          onChange={(e) => setJudul(e.target.value)}
-        />
-      </div>
-      <div>
-        <label htmlFor="tambah-unor" className="block text-xs font-medium text-slate-500">
-          Unit Organisasi Pengusul (Eselon I)
-        </label>
-        <select
+    <Card as="form" onSubmit={handleSubmit} className="max-w-xl space-y-4 p-4">
+      <FormField id="tambah-judul" label="Judul Usulan">
+        <Input id="tambah-judul" type="text" value={judul} onChange={(e) => setJudul(e.target.value)} />
+      </FormField>
+      <FormField id="tambah-unor" label="Unit Organisasi Pengusul (Eselon I)">
+        <Select
           id="tambah-unor"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
           value={unorKode}
           onChange={(e) => {
             setUnorKode(e.target.value);
@@ -1452,51 +1722,28 @@ function TambahUsulanForm({ onAddUsulan }) {
               {u.kode} — {u.nama}
             </option>
           ))}
-        </select>
-      </div>
+        </Select>
+      </FormField>
       <fieldset className="min-w-0 border-0 p-0 m-0">
-        <legend className="block text-xs font-medium text-slate-500">Unit Eselon II Terdampak</legend>
+        <legend className="block text-xs font-medium text-slate-500 dark:text-slate-400">Unit Eselon II Terdampak</legend>
         <div className="mt-1">
           <EselonIIMultiSelect eselonIKode={unorKode} selected={unitTerdampak} onChange={setUnitTerdampak} />
         </div>
       </fieldset>
-      <div>
-        <label htmlFor="tambah-jenis" className="block text-xs font-medium text-slate-500">
-          Jenis Perubahan
-        </label>
-        <select
-          id="tambah-jenis"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={jenisPerubahan}
-          onChange={(e) => setJenisPerubahan(e.target.value)}
-        >
+      <FormField id="tambah-jenis" label="Jenis Perubahan">
+        <Select id="tambah-jenis" value={jenisPerubahan} onChange={(e) => setJenisPerubahan(e.target.value)}>
           {JENIS_PERUBAHAN_LIST.map((j) => (
             <option key={j.kode} value={j.kode}>
               {j.label}
             </option>
           ))}
-        </select>
-      </div>
-      {feedback && (
-        <div
-          role="alert"
-          aria-live={feedback.type === "error" ? "assertive" : "polite"}
-          className={
-            feedback.type === "error"
-              ? "rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-              : "rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
-          }
-        >
-          {feedback.text}
-        </div>
-      )}
-      <button
-        type="submit"
-        className={`rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 ${FOCUS_RING}`}
-      >
+        </Select>
+      </FormField>
+      <FormFeedback feedback={feedback} />
+      <Button type="submit" variant="primary" size="md">
         Simpan Usulan
-      </button>
-    </form>
+      </Button>
+    </Card>
   );
 }
 
@@ -1522,80 +1769,37 @@ function CatatDokumenForm({ usulanList, onAddDokumen }) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-xl space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-    >
-      <div>
-        <label htmlFor="dokumen-usulan" className="block text-xs font-medium text-slate-500">
-          Usulan
-        </label>
-        <select
-          id="dokumen-usulan"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={usulanKode}
-          onChange={(e) => setUsulanKode(e.target.value)}
-        >
+    <Card as="form" onSubmit={handleSubmit} className="max-w-xl space-y-4 p-4">
+      <FormField id="dokumen-usulan" label="Usulan">
+        <Select id="dokumen-usulan" value={usulanKode} onChange={(e) => setUsulanKode(e.target.value)}>
           <option value="">Pilih usulan</option>
           {aktifList.map((u) => (
             <option key={u.kode} value={u.kode}>
               {u.kode} — {u.judul}
             </option>
           ))}
-        </select>
+        </Select>
         {selectedUsulan && (
-          <div className="mt-1 text-xs text-slate-500">Akan dicatat pada putaran ke-{selectedUsulan.putaran}.</div>
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Akan dicatat pada putaran ke-{selectedUsulan.putaran}.</div>
         )}
-      </div>
-      <div>
-        <label htmlFor="dokumen-jenis" className="block text-xs font-medium text-slate-500">
-          Jenis Dokumen
-        </label>
-        <select
-          id="dokumen-jenis"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={jenis}
-          onChange={(e) => setJenis(e.target.value)}
-        >
+      </FormField>
+      <FormField id="dokumen-jenis" label="Jenis Dokumen">
+        <Select id="dokumen-jenis" value={jenis} onChange={(e) => setJenis(e.target.value)}>
           {DOKUMEN_JENIS_LIST.map((d) => (
             <option key={d.kode} value={d.kode}>
               {d.label}
             </option>
           ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="dokumen-tanggal" className="block text-xs font-medium text-slate-500">
-          Tanggal Terima
-        </label>
-        <input
-          id="dokumen-tanggal"
-          type="date"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={tanggalTerima}
-          onChange={(e) => setTanggalTerima(e.target.value)}
-        />
-      </div>
-      {feedback && (
-        <div
-          role="alert"
-          aria-live={feedback.type === "error" ? "assertive" : "polite"}
-          className={
-            feedback.type === "error"
-              ? "rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-              : "rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
-          }
-        >
-          {feedback.text}
-        </div>
-      )}
-      <button
-        type="submit"
-        className={`rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 ${FOCUS_RING}`}
-      >
+        </Select>
+      </FormField>
+      <FormField id="dokumen-tanggal" label="Tanggal Terima">
+        <Input id="dokumen-tanggal" type="date" value={tanggalTerima} onChange={(e) => setTanggalTerima(e.target.value)} />
+      </FormField>
+      <FormFeedback feedback={feedback} />
+      <Button type="submit" variant="primary" size="md">
         Catat Penerimaan
-      </button>
-    </form>
+      </Button>
+    </Card>
   );
 }
 
@@ -1630,17 +1834,10 @@ function CatatValidasiForm({ usulanList, dokumenList, onValidateDokumen }) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-xl space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-    >
-      <div>
-        <label htmlFor="validasi-usulan" className="block text-xs font-medium text-slate-500">
-          Usulan
-        </label>
-        <select
+    <Card as="form" onSubmit={handleSubmit} className="max-w-xl space-y-4 p-4">
+      <FormField id="validasi-usulan" label="Usulan">
+        <Select
           id="validasi-usulan"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
           value={usulanKode}
           onChange={(e) => {
             setUsulanKode(e.target.value);
@@ -1653,87 +1850,38 @@ function CatatValidasiForm({ usulanList, dokumenList, onValidateDokumen }) {
               {u.kode} — {u.judul}
             </option>
           ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="validasi-dokumen" className="block text-xs font-medium text-slate-500">
-          Dokumen (putaran berjalan)
-        </label>
-        <select
-          id="validasi-dokumen"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={dokumenId}
-          onChange={(e) => setDokumenId(e.target.value)}
-        >
+        </Select>
+      </FormField>
+      <FormField id="validasi-dokumen" label="Dokumen (putaran berjalan)">
+        <Select id="validasi-dokumen" value={dokumenId} onChange={(e) => setDokumenId(e.target.value)}>
           <option value="">Pilih dokumen</option>
           {dokumenPilihan.map((d) => (
             <option key={d.id} value={d.id}>
               {DOKUMEN_JENIS_LABEL[d.jenis]} (v{d.versi}) — status saat ini: {STATUS_VALIDASI_BY_KODE[d.statusValidasi].label}
             </option>
           ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="validasi-status" className="block text-xs font-medium text-slate-500">
-          Status Validasi
-        </label>
-        <select
-          id="validasi-status"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={statusValidasi}
-          onChange={(e) => setStatusValidasi(e.target.value)}
-        >
+        </Select>
+      </FormField>
+      <FormField id="validasi-status" label="Status Validasi">
+        <Select id="validasi-status" value={statusValidasi} onChange={(e) => setStatusValidasi(e.target.value)}>
           {STATUS_VALIDASI_LIST.filter((s) => s.kode !== "belum_masuk").map((s) => (
             <option key={s.kode} value={s.kode}>
               {s.label}
             </option>
           ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="validasi-catatan" className="block text-xs font-medium text-slate-500">
-          Catatan Validasi
-        </label>
-        <textarea
-          id="validasi-catatan"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          rows={2}
-          value={catatanValidasi}
-          onChange={(e) => setCatatanValidasi(e.target.value)}
-        />
-      </div>
-      <div>
-        <label htmlFor="validasi-nama" className="block text-xs font-medium text-slate-500">
-          Nama Validator
-        </label>
-        <input
-          id="validasi-nama"
-          type="text"
-          className={`mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm ${FOCUS_RING}`}
-          value={validatorNama}
-          onChange={(e) => setValidatorNama(e.target.value)}
-        />
-      </div>
-      {feedback && (
-        <div
-          role="alert"
-          aria-live={feedback.type === "error" ? "assertive" : "polite"}
-          className={
-            feedback.type === "error"
-              ? "rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-              : "rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700"
-          }
-        >
-          {feedback.text}
-        </div>
-      )}
-      <button
-        type="submit"
-        className={`rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 ${FOCUS_RING}`}
-      >
+        </Select>
+      </FormField>
+      <FormField id="validasi-catatan" label="Catatan Validasi">
+        <Textarea id="validasi-catatan" rows={2} value={catatanValidasi} onChange={(e) => setCatatanValidasi(e.target.value)} />
+      </FormField>
+      <FormField id="validasi-nama" label="Nama Validator">
+        <Input id="validasi-nama" type="text" value={validatorNama} onChange={(e) => setValidatorNama(e.target.value)} />
+      </FormField>
+      <FormFeedback feedback={feedback} />
+      <Button type="submit" variant="primary" size="md">
         Simpan Hasil Validasi
-      </button>
-    </form>
+      </Button>
+    </Card>
   );
 }
 
@@ -1746,22 +1894,20 @@ function FormulirPage({ usulanList, dokumenList, onAddUsulan, onAddDokumen, onVa
   ];
   return (
     <div className="space-y-4">
-      <div role="tablist" className="flex gap-2 border-b border-slate-200">
+      <h2 id="page-heading" tabIndex={-1} className="text-lg font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
+        Formulir Pencatatan
+      </h2>
+      <div role="tablist" className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
         {tabs.map((t) => (
-          <button
+          <TabButton
             key={t.kode}
-            type="button"
             role="tab"
             aria-selected={activeTab === t.kode}
+            active={activeTab === t.kode}
             onClick={() => setActiveTab(t.kode)}
-            className={`border-b-2 px-3 py-2 text-sm font-medium ${FOCUS_RING} ${
-              activeTab === t.kode
-                ? "border-blue-600 text-blue-700"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}
           >
             {t.label}
-          </button>
+          </TabButton>
         ))}
       </div>
       {activeTab === "tambah" && <TambahUsulanForm onAddUsulan={onAddUsulan} />}
@@ -1779,117 +1925,119 @@ function LaporanPage({ usulanList, logs, today }) {
   const overdueList = useMemo(() => computeOverdueList(usulanList, today), [usulanList, today]);
   const ranking = useMemo(() => computeUnitRanking(usulanList), [usulanList]);
 
+  const thClass = "px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 dark:text-slate-400";
+  const tdClass = "px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300";
+  const tdStrongClass = "px-3 py-2.5 text-sm font-medium text-slate-900 dark:text-slate-100";
+
   return (
     <div className="space-y-6">
+      <h2 id="page-heading" tabIndex={-1} className="text-lg font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
+        Laporan
+      </h2>
       <section>
-        <h3 className="mb-2 text-base font-semibold text-slate-800">Rata-Rata Putaran per Unit Organisasi</h3>
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Rata-Rata Putaran per Unit Organisasi</h3>
+        <Card className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/40">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Unit</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Jumlah Usulan</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Rata-Rata Putaran</th>
+                <th className={thClass}>Unit</th>
+                <th className={thClass}>Jumlah Usulan</th>
+                <th className={thClass}>Rata-Rata Putaran</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {avgPutaran.map((row) => (
                 <tr key={row.unorKode}>
-                  <td className="px-3 py-2.5 text-sm font-medium text-slate-900" title={row.unorNama}>
+                  <td className={tdStrongClass} title={row.unorNama}>
                     {row.unorKode} — {row.unorNama}
                   </td>
-                  <td className="px-3 py-2.5 text-sm text-slate-700">{row.jumlahUsulan}</td>
-                  <td className="px-3 py-2.5 text-sm font-medium text-slate-900">{row.avgPutaran.toFixed(1)}</td>
+                  <td className={tdClass}>{row.jumlahUsulan}</td>
+                  <td className={tdStrongClass}>{row.avgPutaran.toFixed(1)}</td>
                 </tr>
               ))}
+              {avgPutaran.length === 0 && <EmptyState colSpan={3} message="Belum ada data usulan." />}
             </tbody>
           </table>
-        </div>
+        </Card>
       </section>
 
       <section>
-        <h3 className="mb-2 text-base font-semibold text-slate-800">Rata-Rata Waktu Tinggal per Tahap</h3>
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Rata-Rata Waktu Tinggal per Tahap</h3>
+        <Card className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/40">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Tahap</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Rata-Rata Hari</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Jumlah Sampel</th>
+                <th className={thClass}>Tahap</th>
+                <th className={thClass}>Rata-Rata Hari</th>
+                <th className={thClass}>Jumlah Sampel</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {avgDwell.map((row) => (
                 <tr key={row.tahapKode}>
-                  <td className="px-3 py-2.5 text-sm font-medium text-slate-900">
+                  <td className={tdStrongClass}>
                     {row.tahapKode} — {row.label}
                   </td>
-                  <td className="px-3 py-2.5 text-sm font-medium text-slate-900">
-                    {row.avgDays === null ? "-" : `${row.avgDays.toFixed(1)} hari`}
-                  </td>
-                  <td className="px-3 py-2.5 text-sm text-slate-700">{row.sampleCount}</td>
+                  <td className={tdStrongClass}>{row.avgDays === null ? "-" : `${row.avgDays.toFixed(1)} hari`}</td>
+                  <td className={tdClass}>{row.sampleCount}</td>
                 </tr>
               ))}
+              {avgDwell.length === 0 && <EmptyState colSpan={3} message="Belum ada data usulan." />}
             </tbody>
           </table>
-        </div>
+        </Card>
       </section>
 
       <section>
-        <h3 className="mb-2 text-base font-semibold text-slate-800">Usulan yang Melewati Batas Waktu</h3>
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Usulan yang Melewati Batas Waktu</h3>
+        <Card className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/40">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Kode</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Tahap</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Umur</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Batas</th>
+                <th className={thClass}>Kode</th>
+                <th className={thClass}>Tahap</th>
+                <th className={thClass}>Umur</th>
+                <th className={thClass}>Batas</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {overdueList.map((u) => (
                 <tr key={u.kode}>
-                  <td className="px-3 py-2.5 text-sm font-medium text-slate-900">{u.kode}</td>
-                  <td className="px-3 py-2.5 text-sm text-slate-700">
+                  <td className={tdStrongClass}>{u.kode}</td>
+                  <td className={tdClass}>
                     {u.tahapSaatIni} — {TAHAP_BY_KODE[u.tahapSaatIni].label}
                   </td>
-                  <td className="px-3 py-2.5 text-sm font-semibold text-red-600">{u.umurHari} hari</td>
-                  <td className="px-3 py-2.5 text-sm text-slate-700">{u.batasHari} hari</td>
+                  <td className="px-3 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400">{u.umurHari} hari</td>
+                  <td className={tdClass}>{u.batasHari} hari</td>
                 </tr>
               ))}
-              {overdueList.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-3 py-4 text-center text-sm text-slate-500">
-                    Tidak ada usulan yang melewati batas waktu.
-                  </td>
-                </tr>
-              )}
+              {overdueList.length === 0 && <EmptyState colSpan={4} message="Tidak ada usulan yang melewati batas waktu." />}
             </tbody>
           </table>
-        </div>
+        </Card>
       </section>
 
       <section>
-        <h3 className="mb-2 text-base font-semibold text-slate-800">Unit Eselon II Paling Sering Menjadi Objek Usulan</h3>
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Unit Eselon II Paling Sering Menjadi Objek Usulan</h3>
+        <Card className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/40">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Unit Eselon II</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500">Jumlah Usulan</th>
+                <th className={thClass}>Unit Eselon II</th>
+                <th className={thClass}>Jumlah Usulan</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {ranking.map((row) => (
                 <tr key={row.unit}>
-                  <td className="px-3 py-2.5 text-sm font-medium text-slate-900">{row.unit}</td>
-                  <td className="px-3 py-2.5 text-sm font-medium text-slate-900">{row.count}</td>
+                  <td className={tdStrongClass}>{row.unit}</td>
+                  <td className={tdStrongClass}>{row.count}</td>
                 </tr>
               ))}
+              {ranking.length === 0 && <EmptyState colSpan={2} message="Belum ada data unit terdampak." />}
             </tbody>
           </table>
-        </div>
+        </Card>
       </section>
     </div>
   );
@@ -1941,12 +2089,25 @@ function CetakRingkasanPage({ usulanList, dokumenList, today }) {
 // =====================================================================
 
 export default function App() {
+  return (
+    <Router hook={useHashLocation}>
+      <AppShell />
+    </Router>
+  );
+}
+
+function AppShell() {
   const today = useMemo(() => new Date(), []);
+  const [location, navigate] = useLocation();
+
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   const [role, setRole] = useState("kepala_biro");
   const [unorViewingAs, setUnorViewingAs] = useState(UNIT_ORGANISASI[0].kode);
-  const [currentView, setCurrentView] = useState("dasbor");
-  const [selectedKode, setSelectedKode] = useState(null);
 
   const [usulanList, setUsulanList] = useState(initialUsulan);
   const [dokumenList, setDokumenList] = useState(initialDokumen);
@@ -1959,27 +2120,35 @@ export default function App() {
   const [dokumenSeq, setDokumenSeq] = useState(dokumenIdSeq);
   const [logSeq, setLogSeq] = useState(logIdSeq);
 
-  // Remembers which tab was open before "Cetak Ringkasan" was pressed, so printing
-  // always shows the same portfolio summary but returns the user to where they were.
-  const viewBeforePrintRef = useRef("dasbor");
+  // "Cetak Ringkasan" triggers window.print() directly rather than navigating to a
+  // route — CetakRingkasanPage stays mounted (hidden) at every route, shown only
+  // via the `print:` media query, so printing never disturbs browser history.
+  const [printRequested, setPrintRequested] = useState(false);
   useEffect(() => {
-    if (currentView === "cetak") {
+    if (printRequested) {
       window.print();
-      setCurrentView(viewBeforePrintRef.current);
+      setPrintRequested(false);
     }
-  }, [currentView]);
+  }, [printRequested]);
+
+  // Moves focus to the current page's heading on every route change, and announces
+  // the new page to screen readers via the live region rendered below.
+  useEffect(() => {
+    document.getElementById("page-heading")?.focus();
+  }, [location]);
+
+  const routeLabel = useMemo(() => {
+    if (location === "/") return "Dasbor";
+    if (location === "/formulir") return "Formulir Pencatatan";
+    if (location === "/laporan") return "Laporan";
+    if (location.startsWith("/usulan/")) return `Detail usulan ${location.slice("/usulan/".length)}`;
+    return "Halaman tidak ditemukan";
+  }, [location]);
 
   const visibleUsulanList = useMemo(() => {
     if (role === "unor") return usulanList.filter((u) => u.unorKode === unorViewingAs);
     return usulanList;
   }, [usulanList, role, unorViewingAs]);
-
-  const selectedUsulan = usulanList.find((u) => u.kode === selectedKode) ?? null;
-
-  const handleSelectUsulan = (kode) => {
-    setSelectedKode(kode);
-    setCurrentView("detail");
-  };
 
   const handleAddUsulan = ({ judul, unorKode, unitTerdampak, jenisPerubahan }) => {
     const seq = usulanSeq + 1;
@@ -2036,20 +2205,13 @@ export default function App() {
     );
   };
 
-  const handleTransition = (toTahap, keterangan) => {
-    if (!selectedUsulan) return { ok: false, error: "Usulan tidak ditemukan." };
-    const result = applyTransition(
-      selectedUsulan,
-      { toTahap, keterangan, olehSiapa: ROLE_LABEL[role] },
-      today,
-    );
+  const handleTransition = (usulan, toTahap, keterangan) => {
+    const result = applyTransition(usulan, { toTahap, keterangan, olehSiapa: ROLE_LABEL[role] }, today);
     if (!result.ok) return result;
 
     const seq = logSeq + 1;
     setLogSeq(seq);
-    setUsulanList((prev) =>
-      prev.map((u) => (u.kode === selectedUsulan.kode ? { ...u, ...result.usulanPatch } : u)),
-    );
+    setUsulanList((prev) => prev.map((u) => (u.kode === usulan.kode ? { ...u, ...result.usulanPatch } : u)));
     setLogs((prev) => [...prev, { ...result.logEntry, id: `L${String(seq).padStart(3, "0")}` }]);
     return { ok: true };
   };
@@ -2067,29 +2229,33 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrintSummary = () => {
-    viewBeforePrintRef.current = currentView;
-    setCurrentView("cetak");
-  };
-
   const canSeeFormulir = role === "pelaksana_biro";
   const canEditDetail = role === "pelaksana_biro";
 
   const navItems = [
-    { kode: "dasbor", label: "Dasbor" },
-    ...(canSeeFormulir ? [{ kode: "formulir", label: "Formulir Pencatatan" }] : []),
-    { kode: "laporan", label: "Laporan" },
+    { path: "/", label: "Dasbor" },
+    ...(canSeeFormulir ? [{ path: "/formulir", label: "Formulir Pencatatan" }] : []),
+    { path: "/laporan", label: "Laporan" },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
-      <header className="print:hidden border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-slate-50 pb-12 dark:bg-slate-900">
+      <a
+        href="#main-content"
+        className={`sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-blue-700 focus:shadow-lg dark:focus:bg-slate-800 dark:focus:text-blue-400 ${FOCUS_RING}`}
+      >
+        Langsung ke konten utama
+      </a>
+      <div aria-live="polite" className="sr-only">
+        {routeLabel}
+      </div>
+      <header className="print:hidden border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-slate-900">
+            <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               Dasbor Pemantauan Usulan Perubahan Organisasi
             </h1>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Biro Kepegawaian, Organisasi, dan Tata Laksana — Sekretariat Jenderal Kementerian Pekerjaan Umum
             </p>
           </div>
@@ -2099,86 +2265,99 @@ export default function App() {
               role={role}
               onChange={(newRole) => {
                 setRole(newRole);
-                setCurrentView("dasbor");
-                setSelectedKode(null);
+                navigate("/");
               }}
             />
-            <button
-              type="button"
-              onClick={handleExportJson}
-              className={`rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 ${FOCUS_RING}`}
-            >
-              Ekspor JSON
-            </button>
-            <button
-              type="button"
-              onClick={handlePrintSummary}
-              className={`rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 ${FOCUS_RING}`}
-            >
-              Cetak Ringkasan
-            </button>
+            <Button onClick={handleExportJson}>Ekspor JSON</Button>
+            <Button onClick={() => setPrintRequested(true)}>Cetak Ringkasan</Button>
+            <Button aria-label={darkMode ? "Aktifkan mode terang" : "Aktifkan mode gelap"} onClick={() => setDarkMode((v) => !v)}>
+              {darkMode ? "☀ Terang" : "🌙 Gelap"}
+            </Button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 px-4">
+        <nav aria-label="Navigasi utama" className="mx-auto flex max-w-7xl gap-1 px-4">
           {navItems.map((item) => (
-            <button
-              key={item.kode}
-              type="button"
-              aria-current={currentView === item.kode ? "page" : undefined}
-              onClick={() => {
-                setCurrentView(item.kode);
-                setSelectedKode(null);
-              }}
-              className={`border-b-2 px-3 py-2 text-sm font-medium ${FOCUS_RING} ${
-                currentView === item.kode
-                  ? "border-blue-600 text-blue-700"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
+            <TabButton
+              key={item.path}
+              aria-current={location === item.path ? "page" : undefined}
+              active={location === item.path}
+              onClick={() => navigate(item.path)}
             >
               {item.label}
-            </button>
+            </TabButton>
           ))}
         </nav>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
-        {currentView === "dasbor" && (
-          <DasborPage
-            usulanList={visibleUsulanList}
-            dokumenList={dokumenList}
-            filters={filters}
-            onFilterChange={setFilters}
-            onSelect={handleSelectUsulan}
-            sort={sort}
-            onSortChange={setSort}
-            today={today}
-          />
-        )}
-        {currentView === "detail" && selectedUsulan && (
-          <DetailUsulanPage
-            usulan={selectedUsulan}
-            dokumenList={dokumenList}
-            logs={logs}
-            onBack={() => setCurrentView("dasbor")}
-            onTransition={handleTransition}
-            canEdit={canEditDetail}
-          />
-        )}
-        {currentView === "formulir" && canSeeFormulir && (
-          <FormulirPage
-            usulanList={usulanList}
-            dokumenList={dokumenList}
-            onAddUsulan={handleAddUsulan}
-            onAddDokumen={handleAddDokumen}
-            onValidateDokumen={handleValidateDokumen}
-          />
-        )}
-        {currentView === "laporan" && (
-          <LaporanPage usulanList={visibleUsulanList} logs={logs} today={today} />
-        )}
-        {currentView === "cetak" && (
+      <main id="main-content" className="mx-auto max-w-7xl px-4 py-6">
+        <div className="print:hidden">
+          <Switch>
+            <Route path="/">
+              <DasborPage
+                usulanList={visibleUsulanList}
+                dokumenList={dokumenList}
+                filters={filters}
+                onFilterChange={setFilters}
+                onSelect={(kode) => navigate(`/usulan/${kode}`)}
+                sort={sort}
+                onSortChange={setSort}
+                today={today}
+              />
+            </Route>
+            <Route path="/usulan/:kode">
+              {(params) => {
+                const usulan = visibleUsulanList.find((u) => u.kode === params.kode) ?? null;
+                if (!usulan) {
+                  return (
+                    <div className="space-y-4">
+                      <h2 id="page-heading" tabIndex={-1} className="text-lg font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
+                        Usulan tidak ditemukan
+                      </h2>
+                      <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Usulan dengan kode &ldquo;{params.kode}&rdquo; tidak ditemukan atau tidak terlihat oleh peran Anda saat ini.
+                      </p>
+                      <Button variant="link" onClick={() => navigate("/")}>
+                        <span aria-hidden="true">&larr;</span> Kembali ke Dasbor
+                      </Button>
+                    </div>
+                  );
+                }
+                return (
+                  <DetailUsulanPage
+                    usulan={usulan}
+                    dokumenList={dokumenList}
+                    logs={logs}
+                    onBack={() => navigate("/")}
+                    onTransition={(toTahap, keterangan) => handleTransition(usulan, toTahap, keterangan)}
+                    canEdit={canEditDetail}
+                  />
+                );
+              }}
+            </Route>
+            <Route path="/formulir">
+              {canSeeFormulir ? (
+                <FormulirPage
+                  usulanList={usulanList}
+                  dokumenList={dokumenList}
+                  onAddUsulan={handleAddUsulan}
+                  onAddDokumen={handleAddDokumen}
+                  onValidateDokumen={handleValidateDokumen}
+                />
+              ) : (
+                <Redirect to="/" />
+              )}
+            </Route>
+            <Route path="/laporan">
+              <LaporanPage usulanList={visibleUsulanList} logs={logs} today={today} />
+            </Route>
+            <Route>
+              <Redirect to="/" />
+            </Route>
+          </Switch>
+        </div>
+        <div className="hidden print:block">
           <CetakRingkasanPage usulanList={visibleUsulanList} dokumenList={dokumenList} today={today} />
-        )}
+        </div>
       </main>
     </div>
   );

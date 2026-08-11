@@ -4,16 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dasbor Usulan Perubahan Organisasi — Biro KOTL</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      @media print {
-        .print\:hidden {
-          display: none !important;
-        }
+    <script>
+      // Runs before first paint to avoid a flash of the wrong theme.
+      if (
+        localStorage.getItem("theme") === "dark" ||
+        (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
       }
-    </style>
+    </script>
   </head>
-  <body class="bg-slate-50">
+  <body class="bg-slate-50 dark:bg-slate-900">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
