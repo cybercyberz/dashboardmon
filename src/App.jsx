@@ -144,17 +144,18 @@ const UNOR_BY_KODE = Object.fromEntries(UNIT_ORGANISASI.map((u) => [u.kode, u]))
 
 // deadlineDays hanya diisi untuk tahap dalam kendali internal Biro KOTL (T1, T2, T5).
 const TAHAP_LIST = [
-  { kode: "T1", label: "Telaah surat usulan", posisiBola: "BKO", deadlineDays: 7 },
-  { kode: "T2", label: "Validasi dokumen", posisiBola: "BKO", deadlineDays: 14 },
-  { kode: "T3", label: "Penyempurnaan di unit organisasi", posisiBola: "UNOR", deadlineDays: null },
-  { kode: "T4", label: "Penjadwalan dan rapat PANRB", posisiBola: "PANRB", deadlineDays: null },
-  { kode: "T5", label: "Pembahasan rancangan permen", posisiBola: "BKO", deadlineDays: 21 },
-  { kode: "T6", label: "Konsultasi publik", posisiBola: "BKO", deadlineDays: null },
-  { kode: "T7", label: "Harmonisasi Kemenkumham", posisiBola: "KUMHAM", deadlineDays: null },
-  { kode: "T8", label: "Penetapan dan pengundangan", posisiBola: "KUMHAM", deadlineDays: null },
+  { kode: "T1", romawi: "I", label: "Telaah surat usulan", posisiBola: "BKO", deadlineDays: 7 },
+  { kode: "T2", romawi: "II", label: "Validasi dokumen", posisiBola: "BKO", deadlineDays: 14 },
+  { kode: "T3", romawi: "III", label: "Penyempurnaan di unit organisasi", posisiBola: "UNOR", deadlineDays: null },
+  { kode: "T4", romawi: "IV", label: "Penjadwalan dan rapat PANRB", posisiBola: "PANRB", deadlineDays: null },
+  { kode: "T5", romawi: "V", label: "Pembahasan rancangan permen", posisiBola: "BKO", deadlineDays: 21 },
+  { kode: "T6", romawi: "VI", label: "Konsultasi publik", posisiBola: "BKO", deadlineDays: null },
+  { kode: "T7", romawi: "VII", label: "Harmonisasi Kemenkumham", posisiBola: "KUMHAM", deadlineDays: null },
+  { kode: "T8", romawi: "VIII", label: "Penetapan dan pengundangan", posisiBola: "KUMHAM", deadlineDays: null },
 ];
 
 const TAHAP_BY_KODE = Object.fromEntries(TAHAP_LIST.map((t) => [t.kode, t]));
+const ROMAWI_BY_KODE = Object.fromEntries(TAHAP_LIST.map((t) => [t.kode, t.romawi]));
 
 // Dokumen wajib per tahap, dipakai untuk indikator kelengkapan "N/M masuk".
 const REQUIRED_DOCS_BY_TAHAP = {
@@ -321,29 +322,35 @@ function getProposalRowFields(u, dokumenList, today) {
 // penanda pengundangan, bukan bagian dari enum tahapSaatIni (T1..T8).
 const TRANSITION_MAP = {
   T1: [
-    { toTahap: "T2", putaranDelta: 0, label: "Setujui, Lanjut Validasi Dokumen (T2)" },
-    { toTahap: "T3", putaranDelta: 1, label: "Tolak, Kembalikan ke Unit Organisasi (T3)" },
+    { toTahap: "T2", putaranDelta: 0, label: "Setujui, Lanjut Validasi Dokumen (Tahap II)" },
+    { toTahap: "T3", putaranDelta: 1, label: "Tolak, Kembalikan ke Unit Organisasi (Tahap III)" },
   ],
   T2: [
-    { toTahap: "T3", putaranDelta: 1, label: "Perlu Perbaikan, Kembalikan (T3)" },
-    { toTahap: "T4", putaranDelta: 0, label: "Seluruh Dokumen Valid, Lanjut ke PANRB (T4)" },
+    { toTahap: "T3", putaranDelta: 1, label: "Perlu Perbaikan, Kembalikan (Tahap III)" },
+    { toTahap: "T4", putaranDelta: 0, label: "Seluruh Dokumen Valid, Lanjut ke PANRB (Tahap IV)" },
   ],
-  T3: [{ toTahap: "T1", putaranDelta: 0, label: "Surat Usulan Versi Baru Diajukan (T1)" }],
+  T3: [{ toTahap: "T1", putaranDelta: 0, label: "Surat Usulan Versi Baru Diajukan (Tahap I)" }],
   T4: [
-    { toTahap: "T5", putaranDelta: 0, label: "Lanjut Pembahasan Rancangan Permen (T5)" },
-    { toTahap: "T6", putaranDelta: 0, label: "Lanjut Konsultasi Publik (T6)" },
-    { toTahap: "T1", putaranDelta: 1, label: "Kembalikan ke Telaah Surat Usulan (T1)" },
-    { toTahap: "T2", putaranDelta: 1, label: "Kembalikan ke Validasi Dokumen (T2)" },
+    { toTahap: "T5", putaranDelta: 0, label: "Lanjut Pembahasan Rancangan Permen (Tahap V)" },
+    { toTahap: "T6", putaranDelta: 0, label: "Lanjut Konsultasi Publik (Tahap VI)" },
+    { toTahap: "T1", putaranDelta: 1, label: "Kembalikan ke Telaah Surat Usulan (Tahap I)" },
+    { toTahap: "T2", putaranDelta: 1, label: "Kembalikan ke Validasi Dokumen (Tahap II)" },
   ],
-  T5: [{ toTahap: "T6", putaranDelta: 0, label: "Lanjut Konsultasi Publik (T6)" }],
-  T6: [{ toTahap: "T7", putaranDelta: 0, label: "Lanjut Harmonisasi Kemenkumham (T7)" }],
-  T7: [{ toTahap: "T8", putaranDelta: 0, label: "Lanjut Penetapan dan Pengundangan (T8)" }],
+  T5: [{ toTahap: "T6", putaranDelta: 0, label: "Lanjut Konsultasi Publik (Tahap VI)" }],
+  T6: [{ toTahap: "T7", putaranDelta: 0, label: "Lanjut Harmonisasi Kemenkumham (Tahap VII)" }],
+  T7: [{ toTahap: "T8", putaranDelta: 0, label: "Lanjut Penetapan dan Pengundangan (Tahap VIII)" }],
   T8: [{ toTahap: "SELESAI", putaranDelta: 0, label: "Tetapkan dan Undangkan (Selesai)" }],
 };
 
-function validateTransition({ usulan, toTahap, keterangan }) {
+function validateTransition({ usulan, toTahap, keterangan, manual = false }) {
   if (!keterangan || !keterangan.trim()) {
     return { ok: false, error: "Keterangan wajib diisi sebelum memindahkan tahap." };
+  }
+  if (manual) {
+    if (!TAHAP_BY_KODE[toTahap] || toTahap === usulan.tahapSaatIni) {
+      return { ok: false, error: "Tahap tujuan tidak valid." };
+    }
+    return { ok: true, putaranDelta: 0 };
   }
   const options = TRANSITION_MAP[usulan.tahapSaatIni] || [];
   const match = options.find((o) => o.toTahap === toTahap);
@@ -354,8 +361,8 @@ function validateTransition({ usulan, toTahap, keterangan }) {
 }
 
 // Satu-satunya titik yang menghasilkan patch Usulan + baris LogStatus untuk setiap perpindahan tahap.
-function applyTransition(usulan, { toTahap, keterangan, olehSiapa }, today = new Date()) {
-  const validation = validateTransition({ usulan, toTahap, keterangan });
+function applyTransition(usulan, { toTahap, keterangan, olehSiapa, manual = false }, today = new Date()) {
+  const validation = validateTransition({ usulan, toTahap, keterangan, manual });
   if (!validation.ok) return { ok: false, error: validation.error };
 
   const isSelesai = toTahap === "SELESAI";
@@ -383,6 +390,7 @@ function applyTransition(usulan, { toTahap, keterangan, olehSiapa }, today = new
     tanggal: tanggalIso,
     keterangan: catatan,
     olehSiapa,
+    manual,
   };
 
   return { ok: true, usulanPatch, logEntry };
@@ -491,6 +499,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-07-28",
     status: "aktif",
     catatanTerakhir: "Surat usulan diterima, menunggu telaah awal.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "SDA-2026-002",
@@ -505,6 +515,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-07-05",
     status: "aktif",
     catatanTerakhir: "Naskah urgensi perlu dilengkapi data dukung analisis beban kerja.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "BM-2026-003",
@@ -523,6 +535,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-05-10",
     status: "aktif",
     catatanTerakhir: "Menunggu penyempurnaan naskah urgensi sesuai catatan validasi.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "CK-2026-004",
@@ -537,6 +551,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-04-01",
     status: "aktif",
     catatanTerakhir: "Menunggu jadwal rapat pembahasan bersama Kementerian PANRB.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "PS-2026-005",
@@ -551,6 +567,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-03-01",
     status: "aktif",
     catatanTerakhir: "Menunggu rancangan Peraturan Menteri dari tim penyusun.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "BK-2026-006",
@@ -565,6 +583,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-02-01",
     status: "aktif",
     catatanTerakhir: "Sedang proses konsultasi publik dengan pemangku kepentingan terkait.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "PIPU-2026-007",
@@ -580,6 +600,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2025-11-01",
     status: "aktif",
     catatanTerakhir: "Dalam proses harmonisasi rancangan Peraturan Menteri bersama Kementerian Hukum dan HAM.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "ITJEN-2026-008",
@@ -594,6 +616,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2025-09-01",
     status: "aktif",
     catatanTerakhir: "Menunggu penetapan dan pengundangan oleh Kementerian Hukum dan HAM.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "SDA-2026-009",
@@ -608,6 +632,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-01-05",
     status: "aktif",
     catatanTerakhir: "Surat usulan versi ketiga diterima, menunggu telaah ulang.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "BPIW-2026-010",
@@ -622,6 +648,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-08-01",
     status: "aktif",
     catatanTerakhir: "Dokumen naskah urgensi sedang dalam proses validasi.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "BPSDM-2026-011",
@@ -636,6 +664,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2025-06-01",
     status: "selesai",
     catatanTerakhir: "Peraturan Menteri telah diundangkan, perubahan organisasi berlaku efektif.",
+    deletedAt: null,
+    deletedBy: null,
   },
   {
     kode: "BM-2026-012",
@@ -650,6 +680,8 @@ const initialUsulan = [
     tanggalUsulanAwal: "2026-06-01",
     status: "aktif",
     catatanTerakhir: "Menunggu penyempurnaan dokumen sesuai catatan Biro KOTL.",
+    deletedAt: null,
+    deletedBy: null,
   },
 ];
 
@@ -763,6 +795,8 @@ const BUTTON_VARIANT_CLASSES = {
     "rounded border border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700",
   primary: "rounded bg-blue-600 font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600",
   success: "rounded bg-green-600 font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600",
+  warning: "rounded bg-amber-600 font-medium text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600",
+  danger: "rounded bg-red-600 font-medium text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600",
   ghost: "rounded text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
   link: "rounded text-sm text-blue-600 hover:underline dark:text-blue-400",
 };
@@ -860,7 +894,6 @@ function EmptyState({ colSpan, message }) {
 }
 
 // Minimal dependency-free modal: focus trap, Escape-to-close, focus-return-to-trigger.
-// Used only for the T8 -> SELESAI transition, the one irreversible action in the app.
 function Modal({ open, onClose, title, children }) {
   const dialogRef = useRef(null);
   const previouslyFocusedRef = useRef(null);
@@ -949,7 +982,7 @@ function StageBarChart({ data }) {
       <div className="space-y-2">
         {data.map((d) => (
           <div key={d.tahapKode} className="flex items-center gap-3">
-            <div className="w-8 shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{d.tahapKode}</div>
+            <div className="w-8 shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{ROMAWI_BY_KODE[d.tahapKode]}</div>
             <div className="flex-1">
               <div className="h-5 w-full overflow-hidden rounded bg-slate-100 dark:bg-slate-700">
                 <div
@@ -1012,7 +1045,7 @@ function FilterBar({ filters, onChange }) {
           <option value="">Semua Tahap</option>
           {TAHAP_LIST.map((t) => (
             <option key={t.kode} value={t.kode}>
-              {t.kode} — {t.label}
+              {t.romawi} — {t.label}
             </option>
           ))}
         </select>
@@ -1037,7 +1070,7 @@ function FilterBar({ filters, onChange }) {
       </div>
       <div>
         <label htmlFor="filter-posisi" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
-          Posisi Bola
+          Penanggung Jawab Saat Ini
         </label>
         <select
           id="filter-posisi"
@@ -1054,7 +1087,7 @@ function FilterBar({ filters, onChange }) {
         </select>
       </div>
       <Button onClick={() => onChange({ unorKode: "", tahap: "", jenisPerubahan: "", posisiBola: "" })}>
-        Reset Filter
+        Atur Ulang Filter
       </Button>
     </Card>
   );
@@ -1085,7 +1118,58 @@ function SortHeader({ label, field, sort, onSortChange }) {
   );
 }
 
-function ProposalRowCard({ u, dokumenList, onSelect, today }) {
+function RowActionsMenu({ onDelete }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label="Menu aksi usulan"
+        onClick={() => setOpen((v) => !v)}
+        className={`rounded px-1.5 py-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300 ${FOCUS_RING}`}
+      >
+        <span aria-hidden="true">⋮</span>
+      </button>
+      {open && (
+        <div role="menu" className={`absolute right-0 z-10 mt-1 w-32 ${CARD_SURFACE} py-1 shadow-lg`}>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+            className={`block w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 ${FOCUS_RING}`}
+          >
+            Hapus
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProposalRowCard({ u, dokumenList, onSelect, today, canDelete, onDelete }) {
   const { tahap, posisi, overdue, umur, masuk, total } = getProposalRowFields(u, dokumenList, today);
   return (
     <Card
@@ -1109,7 +1193,10 @@ function ProposalRowCard({ u, dokumenList, onSelect, today }) {
             {u.unorKode} — {u.judul}
           </div>
         </div>
-        <Pill color={posisi.color}>{posisi.label}</Pill>
+        <div className="flex items-center gap-2">
+          <Pill color={posisi.color}>{posisi.label}</Pill>
+          {canDelete && <RowActionsMenu onDelete={() => onDelete(u.kode)} />}
+        </div>
       </div>
       <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
         <div>
@@ -1119,7 +1206,7 @@ function ProposalRowCard({ u, dokumenList, onSelect, today }) {
         <div>
           <dt className="text-xs text-slate-500 dark:text-slate-400">Tahap</dt>
           <dd className="text-slate-700 dark:text-slate-300">
-            {u.tahapSaatIni} — {tahap.label}
+            {ROMAWI_BY_KODE[u.tahapSaatIni]} — {tahap.label}
           </dd>
         </div>
         <div>
@@ -1149,7 +1236,7 @@ function ProposalRowCard({ u, dokumenList, onSelect, today }) {
   );
 }
 
-function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, today }) {
+function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, today, canDelete, onDelete }) {
   return (
     <>
       <Card className="hidden overflow-x-auto sm:block">
@@ -1159,12 +1246,13 @@ function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, 
               <SortHeader label="Kode / Unit" field="kode" sort={sort} onSortChange={onSortChange} />
               <SortHeader label="Jenis Perubahan" field="jenisPerubahan" sort={sort} onSortChange={onSortChange} />
               <SortHeader label="Tahap" field="tahapSaatIni" sort={sort} onSortChange={onSortChange} />
-              <SortHeader label="Posisi Bola" field="posisiBola" sort={sort} onSortChange={onSortChange} />
+              <SortHeader label="Penanggung Jawab Saat Ini" field="posisiBola" sort={sort} onSortChange={onSortChange} />
               <SortHeader label="Putaran" field="putaran" sort={sort} onSortChange={onSortChange} />
               <SortHeader label="Umur di Tahap" field="umur" sort={sort} onSortChange={onSortChange} />
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Dokumen
               </th>
+              {canDelete && <th className="px-2 py-2" aria-hidden="true"></th>}
               <th className="px-2 py-2" aria-hidden="true"></th>
             </tr>
           </thead>
@@ -1197,7 +1285,7 @@ function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, 
                   </td>
                   <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">{JENIS_PERUBAHAN_LABEL[u.jenisPerubahan]}</td>
                   <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">
-                    {u.tahapSaatIni} — {tahap.label}
+                    {ROMAWI_BY_KODE[u.tahapSaatIni]} — {tahap.label}
                   </td>
                   <td className="px-3 py-2.5">
                     <Pill color={posisi.color}>{posisi.label}</Pill>
@@ -1217,6 +1305,11 @@ function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, 
                   <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">
                     {masuk}/{total} masuk
                   </td>
+                  {canDelete && (
+                    <td className="px-2 py-2.5" onClick={(e) => e.stopPropagation()}>
+                      <RowActionsMenu onDelete={() => onDelete(u.kode)} />
+                    </td>
+                  )}
                   <td className="px-2 py-2.5 text-slate-300 group-hover:text-slate-500 group-focus-visible:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400 dark:group-focus-visible:text-slate-400">
                     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
                       <path
@@ -1229,13 +1322,23 @@ function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, 
                 </tr>
               );
             })}
-            {usulanList.length === 0 && <EmptyState colSpan={8} message="Tidak ada usulan yang sesuai dengan filter." />}
+            {usulanList.length === 0 && (
+              <EmptyState colSpan={canDelete ? 9 : 8} message="Tidak ada usulan yang sesuai dengan filter." />
+            )}
           </tbody>
         </table>
       </Card>
       <div className="space-y-3 sm:hidden">
         {usulanList.map((u) => (
-          <ProposalRowCard key={u.kode} u={u} dokumenList={dokumenList} onSelect={onSelect} today={today} />
+          <ProposalRowCard
+            key={u.kode}
+            u={u}
+            dokumenList={dokumenList}
+            onSelect={onSelect}
+            today={today}
+            canDelete={canDelete}
+            onDelete={onDelete}
+          />
         ))}
         {usulanList.length === 0 && (
           <Card className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -1275,9 +1378,12 @@ function Timeline({ usulan, logs }) {
               <li key={log.id} className="relative">
                 <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-500 dark:bg-blue-400" />
                 <div className="text-xs text-slate-500 dark:text-slate-400">{formatTanggal(log.tanggal)}</div>
-                <div className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                  {TAHAP_BY_KODE[log.dariTahap]?.label ?? log.dariTahap} &rarr;{" "}
-                  {log.keTahap === "SELESAI" ? "Selesai (Diundangkan)" : `${log.keTahap} — ${TAHAP_BY_KODE[log.keTahap]?.label}`}
+                <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-800 dark:text-slate-100">
+                  <span>
+                    {ROMAWI_BY_KODE[log.dariTahap] ? `${ROMAWI_BY_KODE[log.dariTahap]} — ${TAHAP_BY_KODE[log.dariTahap]?.label}` : (TAHAP_BY_KODE[log.dariTahap]?.label ?? log.dariTahap)} &rarr;{" "}
+                    {log.keTahap === "SELESAI" ? "Selesai (Diundangkan)" : `${ROMAWI_BY_KODE[log.keTahap]} — ${TAHAP_BY_KODE[log.keTahap]?.label}`}
+                  </span>
+                  {log.manual && <Pill color="amber">Manual</Pill>}
                 </div>
                 <div className="text-sm text-slate-600 dark:text-slate-300">{log.keterangan}</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">oleh {log.olehSiapa}</div>
@@ -1467,6 +1573,122 @@ function TransitionActions({ usulan, onTransition }) {
   );
 }
 
+function BypassTransitionPanel({ usulan, onTransition }) {
+  const [expanded, setExpanded] = useState(false);
+  const [toTahap, setToTahap] = useState("");
+  const [keterangan, setKeterangan] = useState("");
+  const [error, setError] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  if (usulan.status !== "aktif") return null;
+
+  const currentIndex = TAHAP_LIST.findIndex((t) => t.kode === usulan.tahapSaatIni);
+  const otherTahap = TAHAP_LIST.filter((t) => t.kode !== usulan.tahapSaatIni);
+  const selectedTahap = TAHAP_BY_KODE[toTahap];
+
+  const closeAll = () => {
+    setExpanded(false);
+    setConfirmOpen(false);
+    setToTahap("");
+    setKeterangan("");
+    setError("");
+  };
+
+  const handleConfirm = () => {
+    const result = onTransition(toTahap, keterangan, true);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    closeAll();
+  };
+
+  return (
+    <Card className="border-amber-200 p-4 dark:border-amber-800">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        className={`text-sm font-medium text-amber-700 hover:underline dark:text-amber-400 ${FOCUS_RING}`}
+      >
+        <span aria-hidden="true">{expanded ? "↓" : "→"}</span>{" "}
+        {expanded ? "Sembunyikan opsi lanjutan" : "Tampilkan opsi lanjutan: Pindahkan Tahap Manual"}
+      </button>
+      {expanded && (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Gunakan hanya untuk kondisi khusus di luar alur baku (mis. koreksi kesalahan input). Perpindahan ini akan
+            tercatat pada log sebagai tindakan manual.
+          </p>
+          <label htmlFor="bypass-tahap" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+            Tahap Tujuan
+          </label>
+          <Select
+            id="bypass-tahap"
+            value={toTahap}
+            onChange={(e) => {
+              setToTahap(e.target.value);
+              setError("");
+            }}
+          >
+            <option value="">Pilih tahap tujuan</option>
+            {otherTahap.map((t) => {
+              const idx = TAHAP_LIST.findIndex((x) => x.kode === t.kode);
+              return (
+                <option key={t.kode} value={t.kode}>
+                  {t.romawi} — {t.label} ({idx > currentIndex ? "Maju" : "Mundur"})
+                </option>
+              );
+            })}
+          </Select>
+          {toTahap && (
+            <>
+              <label htmlFor="bypass-keterangan" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Alasan (wajib diisi, akan tercatat pada log)
+              </label>
+              <Textarea id="bypass-keterangan" rows={2} value={keterangan} onChange={(e) => setKeterangan(e.target.value)} />
+            </>
+          )}
+          {error && (
+            <div role="alert" aria-live="assertive" className="text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+          {toTahap && (
+            <div className="flex gap-2">
+              <Button variant="warning" onClick={() => setConfirmOpen(true)}>
+                Pindahkan Tahap
+              </Button>
+              <Button onClick={closeAll}>Batal</Button>
+            </div>
+          )}
+        </div>
+      )}
+      <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Pindahkan Tahap Manual — Lewati Alur Normal">
+        <div className="space-y-2">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Usulan akan dipindahkan langsung dari {ROMAWI_BY_KODE[usulan.tahapSaatIni]} —{" "}
+            {TAHAP_BY_KODE[usulan.tahapSaatIni]?.label} ke{" "}
+            {selectedTahap && `${ROMAWI_BY_KODE[toTahap]} — ${selectedTahap.label}`}, di luar alur transisi baku.
+            Pastikan alasan sudah benar.
+          </p>
+          {error && (
+            <div role="alert" aria-live="assertive" className="text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+          <div className="flex gap-2 pt-1">
+            <Button variant="warning" onClick={handleConfirm}>
+              Konfirmasi Pindahkan
+            </Button>
+            <Button onClick={() => setConfirmOpen(false)}>Batal</Button>
+          </div>
+        </div>
+      </Modal>
+    </Card>
+  );
+}
+
 function EselonIIMultiSelect({ eselonIKode, selected, onChange }) {
   const unit = UNOR_BY_KODE[eselonIKode]?.unit ?? [];
   const toggle = (name) => {
@@ -1549,7 +1771,18 @@ function compareUsulanField(a, b, field, today) {
 // HALAMAN
 // =====================================================================
 
-function DasborPage({ usulanList, dokumenList, filters, onFilterChange, onSelect, sort, onSortChange, today }) {
+function DasborPage({
+  usulanList,
+  dokumenList,
+  filters,
+  onFilterChange,
+  onSelect,
+  sort,
+  onSortChange,
+  today,
+  canDelete,
+  onDelete,
+}) {
   const summary = useMemo(() => computeSummary(usulanList, today), [usulanList, today]);
   const chartData = useMemo(() => computeStageChartData(usulanList), [usulanList]);
 
@@ -1606,6 +1839,8 @@ function DasborPage({ usulanList, dokumenList, filters, onFilterChange, onSelect
         sort={sort}
         onSortChange={handleSortChange}
         today={today}
+        canDelete={canDelete}
+        onDelete={onDelete}
       />
     </div>
   );
@@ -1618,7 +1853,7 @@ function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, can
 
   return (
     <div className="space-y-4">
-      <nav aria-label="Breadcrumb" className="print:hidden text-xs text-slate-500 dark:text-slate-400">
+      <nav aria-label="Navigasi" className="print:hidden text-xs text-slate-500 dark:text-slate-400">
         <Link href="/" className={`hover:underline dark:text-blue-400 text-blue-600 ${FOCUS_RING}`}>
           Dasbor
         </Link>{" "}
@@ -1642,7 +1877,7 @@ function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, can
           <div className="flex flex-col items-end gap-1">
             <Pill color={posisi.color}>{posisi.label}</Pill>
             <div className="text-xs text-slate-500 dark:text-slate-400">
-              {usulan.tahapSaatIni} — {tahap.label} · Putaran ke-{usulan.putaran}
+              {ROMAWI_BY_KODE[usulan.tahapSaatIni]} — {tahap.label} · Putaran ke-{usulan.putaran}
             </div>
             {usulan.status === "selesai" && <Pill color="green">Selesai</Pill>}
           </div>
@@ -1652,6 +1887,17 @@ function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, can
           {usulan.catatanTerakhir}
         </div>
       </Card>
+
+      {usulan.deletedAt && (
+        <div
+          role="status"
+          className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"
+        >
+          Usulan ini telah dihapus pada {usulan.deletedAt}
+          {usulan.deletedBy ? ` oleh ${usulan.deletedBy}` : ""}. Kunjungi halaman{" "}
+          <span className="font-medium">Usulan Terhapus</span> untuk memulihkannya.
+        </div>
+      )}
 
       <Card className="p-4">
         <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Jenis Perubahan &amp; Unit Eselon II Terdampak</h3>
@@ -1665,7 +1911,8 @@ function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, can
         </ul>
       </Card>
 
-      {canEdit && <TransitionActions usulan={usulan} onTransition={onTransition} />}
+      {canEdit && !usulan.deletedAt && <TransitionActions usulan={usulan} onTransition={onTransition} />}
+      {canEdit && !usulan.deletedAt && <BypassTransitionPanel usulan={usulan} onTransition={onTransition} />}
 
       <div>
         <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Lini Masa</h3>
@@ -1976,7 +2223,7 @@ function LaporanPage({ usulanList, logs, today }) {
               {avgDwell.map((row) => (
                 <tr key={row.tahapKode}>
                   <td className={tdStrongClass}>
-                    {row.tahapKode} — {row.label}
+                    {ROMAWI_BY_KODE[row.tahapKode]} — {row.label}
                   </td>
                   <td className={tdStrongClass}>{row.avgDays === null ? "-" : `${row.avgDays.toFixed(1)} hari`}</td>
                   <td className={tdClass}>{row.sampleCount}</td>
@@ -2005,7 +2252,7 @@ function LaporanPage({ usulanList, logs, today }) {
                 <tr key={u.kode}>
                   <td className={tdStrongClass}>{u.kode}</td>
                   <td className={tdClass}>
-                    {u.tahapSaatIni} — {TAHAP_BY_KODE[u.tahapSaatIni].label}
+                    {ROMAWI_BY_KODE[u.tahapSaatIni]} — {TAHAP_BY_KODE[u.tahapSaatIni].label}
                   </td>
                   <td className="px-3 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400">{u.umurHari} hari</td>
                   <td className={tdClass}>{u.batasHari} hari</td>
@@ -2084,6 +2331,63 @@ function CetakRingkasanPage({ usulanList, dokumenList, today }) {
   );
 }
 
+function RecycleBinPage({ usulanList, onRestore, onSelect }) {
+  return (
+    <div className="space-y-4">
+      <h2 id="page-heading" tabIndex={-1} className="text-lg font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
+        Usulan Terhapus
+      </h2>
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        Usulan yang dihapus disimpan di sini dan dapat dipulihkan kapan saja.
+      </p>
+      <Card className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+          <thead className="bg-slate-50 dark:bg-slate-900/40">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Kode / Judul
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Dihapus Pada
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Dihapus Oleh
+              </th>
+              <th className="px-2 py-2" aria-hidden="true"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            {usulanList.map((u) => (
+              <tr key={u.kode} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                <td className="px-3 py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => onSelect(u.kode)}
+                    className={`font-medium text-blue-600 hover:underline dark:text-blue-400 ${FOCUS_RING}`}
+                  >
+                    {u.kode}
+                  </button>
+                  <div className="max-w-[280px] truncate text-xs text-slate-500 dark:text-slate-400" title={u.judul}>
+                    {u.judul}
+                  </div>
+                </td>
+                <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">{u.deletedAt}</td>
+                <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">{u.deletedBy}</td>
+                <td className="px-3 py-2.5">
+                  <Button variant="success" onClick={() => onRestore(u.kode)}>
+                    Pulihkan
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {usulanList.length === 0 && <EmptyState colSpan={4} message="Tidak ada usulan yang dihapus." />}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
 // =====================================================================
 // APLIKASI UTAMA
 // =====================================================================
@@ -2094,6 +2398,21 @@ export default function App() {
       <AppShell />
     </Router>
   );
+}
+
+function usePersistedState(key, initialValue) {
+  const [state, setState] = useState(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored !== null ? JSON.parse(stored) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(state));
+  }, [key, state]);
+  return [state, setState];
 }
 
 function AppShell() {
@@ -2109,16 +2428,17 @@ function AppShell() {
   const [role, setRole] = useState("kepala_biro");
   const [unorViewingAs, setUnorViewingAs] = useState(UNIT_ORGANISASI[0].kode);
 
-  const [usulanList, setUsulanList] = useState(initialUsulan);
-  const [dokumenList, setDokumenList] = useState(initialDokumen);
-  const [logs, setLogs] = useState(initialLogs);
+  const [usulanList, setUsulanList] = usePersistedState("dashboardmon:usulanList", initialUsulan);
+  const [dokumenList, setDokumenList] = usePersistedState("dashboardmon:dokumenList", initialDokumen);
+  const [logs, setLogs] = usePersistedState("dashboardmon:logs", initialLogs);
 
   const [filters, setFilters] = useState({ unorKode: "", tahap: "", jenisPerubahan: "", posisiBola: "" });
   const [sort, setSort] = useState({ field: "kode", direction: "asc" });
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const [usulanSeq, setUsulanSeq] = useState(initialUsulan.length);
-  const [dokumenSeq, setDokumenSeq] = useState(dokumenIdSeq);
-  const [logSeq, setLogSeq] = useState(logIdSeq);
+  const [usulanSeq, setUsulanSeq] = usePersistedState("dashboardmon:usulanSeq", initialUsulan.length);
+  const [dokumenSeq, setDokumenSeq] = usePersistedState("dashboardmon:dokumenSeq", dokumenIdSeq);
+  const [logSeq, setLogSeq] = usePersistedState("dashboardmon:logSeq", logIdSeq);
 
   // "Cetak Ringkasan" triggers window.print() directly rather than navigating to a
   // route — CetakRingkasanPage stays mounted (hidden) at every route, shown only
@@ -2141,14 +2461,18 @@ function AppShell() {
     if (location === "/") return "Dasbor";
     if (location === "/formulir") return "Formulir Pencatatan";
     if (location === "/laporan") return "Laporan";
+    if (location === "/recycle-bin") return "Usulan Terhapus";
     if (location.startsWith("/usulan/")) return `Detail usulan ${location.slice("/usulan/".length)}`;
     return "Halaman tidak ditemukan";
   }, [location]);
 
   const visibleUsulanList = useMemo(() => {
-    if (role === "unor") return usulanList.filter((u) => u.unorKode === unorViewingAs);
-    return usulanList;
+    const notDeleted = usulanList.filter((u) => !u.deletedAt);
+    if (role === "unor") return notDeleted.filter((u) => u.unorKode === unorViewingAs);
+    return notDeleted;
   }, [usulanList, role, unorViewingAs]);
+
+  const deletedUsulanList = useMemo(() => usulanList.filter((u) => u.deletedAt), [usulanList]);
 
   const handleAddUsulan = ({ judul, unorKode, unitTerdampak, jenisPerubahan }) => {
     const seq = usulanSeq + 1;
@@ -2170,6 +2494,8 @@ function AppShell() {
         tanggalUsulanAwal: tanggalIso,
         status: "aktif",
         catatanTerakhir: "Usulan baru dicatat, menunggu telaah awal.",
+        deletedAt: null,
+        deletedBy: null,
       },
     ]);
   };
@@ -2205,8 +2531,8 @@ function AppShell() {
     );
   };
 
-  const handleTransition = (usulan, toTahap, keterangan) => {
-    const result = applyTransition(usulan, { toTahap, keterangan, olehSiapa: ROLE_LABEL[role] }, today);
+  const handleTransition = (usulan, toTahap, keterangan, manual = false) => {
+    const result = applyTransition(usulan, { toTahap, keterangan, olehSiapa: ROLE_LABEL[role], manual }, today);
     if (!result.ok) return result;
 
     const seq = logSeq + 1;
@@ -2214,6 +2540,17 @@ function AppShell() {
     setUsulanList((prev) => prev.map((u) => (u.kode === usulan.kode ? { ...u, ...result.usulanPatch } : u)));
     setLogs((prev) => [...prev, { ...result.logEntry, id: `L${String(seq).padStart(3, "0")}` }]);
     return { ok: true };
+  };
+
+  const handleDeleteUsulan = (kode) => {
+    const tanggalIso = toIsoDate(today);
+    setUsulanList((prev) =>
+      prev.map((u) => (u.kode === kode ? { ...u, deletedAt: tanggalIso, deletedBy: ROLE_LABEL[role] } : u)),
+    );
+  };
+
+  const handleRestoreUsulan = (kode) => {
+    setUsulanList((prev) => prev.map((u) => (u.kode === kode ? { ...u, deletedAt: null, deletedBy: null } : u)));
   };
 
   const handleExportJson = () => {
@@ -2231,11 +2568,13 @@ function AppShell() {
 
   const canSeeFormulir = role === "pelaksana_biro";
   const canEditDetail = role === "pelaksana_biro";
+  const canManageTrash = role === "pelaksana_biro";
 
   const navItems = [
     { path: "/", label: "Dasbor" },
     ...(canSeeFormulir ? [{ path: "/formulir", label: "Formulir Pencatatan" }] : []),
     { path: "/laporan", label: "Laporan" },
+    ...(canManageTrash ? [{ path: "/recycle-bin", label: "Usulan Terhapus" }] : []),
   ];
 
   return (
@@ -2302,11 +2641,16 @@ function AppShell() {
                 sort={sort}
                 onSortChange={setSort}
                 today={today}
+                canDelete={canManageTrash}
+                onDelete={(kode) => setDeleteTarget(kode)}
               />
             </Route>
             <Route path="/usulan/:kode">
               {(params) => {
-                const usulan = visibleUsulanList.find((u) => u.kode === params.kode) ?? null;
+                const usulan =
+                  usulanList.find(
+                    (u) => u.kode === params.kode && (role !== "unor" || u.unorKode === unorViewingAs),
+                  ) ?? null;
                 if (!usulan) {
                   return (
                     <div className="space-y-4">
@@ -2328,7 +2672,7 @@ function AppShell() {
                     dokumenList={dokumenList}
                     logs={logs}
                     onBack={() => navigate("/")}
-                    onTransition={(toTahap, keterangan) => handleTransition(usulan, toTahap, keterangan)}
+                    onTransition={(toTahap, keterangan, manual) => handleTransition(usulan, toTahap, keterangan, manual)}
                     canEdit={canEditDetail}
                   />
                 );
@@ -2337,7 +2681,7 @@ function AppShell() {
             <Route path="/formulir">
               {canSeeFormulir ? (
                 <FormulirPage
-                  usulanList={usulanList}
+                  usulanList={usulanList.filter((u) => !u.deletedAt)}
                   dokumenList={dokumenList}
                   onAddUsulan={handleAddUsulan}
                   onAddDokumen={handleAddDokumen}
@@ -2350,6 +2694,17 @@ function AppShell() {
             <Route path="/laporan">
               <LaporanPage usulanList={visibleUsulanList} logs={logs} today={today} />
             </Route>
+            <Route path="/recycle-bin">
+              {canManageTrash ? (
+                <RecycleBinPage
+                  usulanList={deletedUsulanList}
+                  onRestore={handleRestoreUsulan}
+                  onSelect={(kode) => navigate(`/usulan/${kode}`)}
+                />
+              ) : (
+                <Redirect to="/" />
+              )}
+            </Route>
             <Route>
               <Redirect to="/" />
             </Route>
@@ -2359,6 +2714,28 @@ function AppShell() {
           <CetakRingkasanPage usulanList={visibleUsulanList} dokumenList={dokumenList} today={today} />
         </div>
       </main>
+
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Hapus Usulan">
+        <div className="space-y-3">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Usulan <span className="font-medium text-slate-900 dark:text-slate-100">{deleteTarget}</span> akan
+            dipindahkan ke Usulan Terhapus dan disembunyikan dari Dasbor dan Laporan. Tindakan ini dapat dibatalkan
+            kapan saja melalui halaman <span className="font-medium">Usulan Terhapus</span>.
+          </p>
+          <div className="flex gap-2 pt-1">
+            <Button
+              variant="danger"
+              onClick={() => {
+                handleDeleteUsulan(deleteTarget);
+                setDeleteTarget(null);
+              }}
+            >
+              Hapus Usulan
+            </Button>
+            <Button onClick={() => setDeleteTarget(null)}>Batal</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
