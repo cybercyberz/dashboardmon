@@ -360,6 +360,24 @@ function validateTransition({ usulan, toTahap, keterangan, manual = false }) {
   return { ok: true, putaranDelta: match.putaranDelta };
 }
 
+// Validasi tanggal tahap yang diedit ulang tetap konsisten secara kronologis dengan
+// entri tetangganya (urutan kemunculan asli, bukan urutan tampilan yang diurutkan tanggal).
+function validateTanggalEdit({ newTanggal, prevTanggal, nextTanggal, todayIso }) {
+  if (!newTanggal) {
+    return { ok: false, error: "Tanggal wajib diisi." };
+  }
+  if (prevTanggal && newTanggal < prevTanggal) {
+    return { ok: false, error: `Tanggal tidak boleh sebelum ${formatTanggal(prevTanggal)}.` };
+  }
+  if (nextTanggal && newTanggal > nextTanggal) {
+    return { ok: false, error: `Tanggal tidak boleh sesudah ${formatTanggal(nextTanggal)}.` };
+  }
+  if (!nextTanggal && newTanggal > todayIso) {
+    return { ok: false, error: "Tanggal tidak boleh di masa depan." };
+  }
+  return { ok: true };
+}
+
 // Satu-satunya titik yang menghasilkan patch Usulan + baris LogStatus untuk setiap perpindahan tahap.
 function applyTransition(usulan, { toTahap, keterangan, olehSiapa, manual = false }, today = new Date()) {
   const validation = validateTransition({ usulan, toTahap, keterangan, manual });
@@ -1350,7 +1368,16 @@ function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, 
   );
 }
 
-function Timeline({ usulan, logs }) {
+// Ikon pensil kecil (Heroicons "pencil-square", 20x20) dipakai tombol ubah tanggal.
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5" aria-hidden="true">
+      <path d="M13.488 2.513a1.75 1.75 0 012.475 2.474L6.75 14.199l-3.25.75.75-3.25 9.238-9.186zM12.25 4.25l3 3" />
+    </svg>
+  );
+}
+
+function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogTanggal }) {
   const maxPutaran = usulan.putaran;
   const rounds = [];
   for (let r = 1; r <= maxPutaran; r += 1) {
@@ -1359,6 +1386,111 @@ function Timeline({ usulan, logs }) {
       logs: logs.filter((l) => l.putaran === r).sort((a, b) => (a.tanggal < b.tanggal ? -1 : 1)),
     });
   }
+
+  const [editingKey, setEditingKey] = useState(null);
+  const [draftValue, setDraftValue] = useState("");
+  const [draftError, setDraftError] = useState("");
+  const dateInputRef = useRef(null);
+  const returnFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (editingKey) dateInputRef.current?.focus();
+  }, [editingKey]);
+
+  const startEdit = (entryKey, currentIso, triggerEl) => {
+    returnFocusRef.current = triggerEl;
+    setEditingKey(entryKey);
+    setDraftValue(currentIso);
+    setDraftError("");
+  };
+
+  const cancelEdit = () => {
+    setEditingKey(null);
+    setDraftError("");
+    returnFocusRef.current?.focus?.();
+  };
+
+  const saveEdit = (persist) => {
+    const result = persist(draftValue);
+    if (!result || !result.ok) {
+      setDraftError(result?.error ?? "Tanggal tidak valid.");
+      return;
+    }
+    setEditingKey(null);
+    setDraftError("");
+    returnFocusRef.current?.focus?.();
+  };
+
+  const renderTanggal = ({ entryKey, tanggal, editedAt, editedBy, ariaLabel, onSave }) => {
+    if (editingKey !== entryKey) {
+      return (
+        <>
+          <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+            <span>{formatTanggal(tanggal)}</span>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                className="!p-0.5 leading-none"
+                aria-label={ariaLabel}
+                onClick={(e) => startEdit(entryKey, tanggal, e.currentTarget)}
+              >
+                <EditIcon />
+              </Button>
+            )}
+          </div>
+          {editedAt && (
+            <div className="text-xs italic text-slate-400 dark:text-slate-500">
+              Tanggal disunting pada {formatTanggal(editedAt)} oleh {editedBy}
+            </div>
+          )}
+        </>
+      );
+    }
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <label htmlFor={`tanggal-edit-${entryKey}`} className="sr-only">
+          {ariaLabel}
+        </label>
+        <input
+          id={`tanggal-edit-${entryKey}`}
+          ref={dateInputRef}
+          type="date"
+          className={`${INPUT_BASE} w-auto py-1 text-xs`}
+          value={draftValue}
+          onChange={(e) => setDraftValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              saveEdit(onSave);
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              cancelEdit();
+            }
+          }}
+          aria-invalid={draftError ? "true" : undefined}
+          aria-describedby={draftError ? `tanggal-edit-error-${entryKey}` : undefined}
+        />
+        <Button
+          variant="ghost"
+          className="!p-1 leading-none text-green-600 dark:text-green-400"
+          aria-label="Simpan tanggal"
+          onClick={() => saveEdit(onSave)}
+        >
+          <span aria-hidden="true">&#10003;</span>
+        </Button>
+        <Button variant="ghost" className="!p-1 leading-none" aria-label="Batalkan pengeditan tanggal" onClick={cancelEdit}>
+          <span aria-hidden="true">&times;</span>
+        </Button>
+        {draftError && (
+          <div id={`tanggal-edit-error-${entryKey}`} role="alert" className="w-full text-xs text-red-600 dark:text-red-400">
+            {draftError}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {rounds.map((round) => (
@@ -1370,14 +1502,28 @@ function Timeline({ usulan, logs }) {
             {round.putaran === 1 && (
               <li className="relative">
                 <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-400 dark:bg-slate-500" />
-                <div className="text-xs text-slate-500 dark:text-slate-400">{formatTanggal(usulan.tanggalUsulanAwal)}</div>
+                {renderTanggal({
+                  entryKey: "__awal__",
+                  tanggal: usulan.tanggalUsulanAwal,
+                  editedAt: usulan.tanggalUsulanAwalEditedAt,
+                  editedBy: usulan.tanggalUsulanAwalEditedBy,
+                  ariaLabel: "Ubah tanggal usulan diterima",
+                  onSave: onEditTanggalAwal,
+                })}
                 <div className="text-sm font-medium text-slate-800 dark:text-slate-100">Usulan diterima</div>
               </li>
             )}
             {round.logs.map((log) => (
               <li key={log.id} className="relative">
                 <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-500 dark:bg-blue-400" />
-                <div className="text-xs text-slate-500 dark:text-slate-400">{formatTanggal(log.tanggal)}</div>
+                {renderTanggal({
+                  entryKey: log.id,
+                  tanggal: log.tanggal,
+                  editedAt: log.tanggalEditedAt,
+                  editedBy: log.tanggalEditedBy,
+                  ariaLabel: `Ubah tanggal perpindahan ke ${log.keTahap === "SELESAI" ? "Selesai" : (TAHAP_BY_KODE[log.keTahap]?.label ?? log.keTahap)}`,
+                  onSave: (value) => onEditLogTanggal(log.id, value),
+                })}
                 <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-800 dark:text-slate-100">
                   <span>
                     {ROMAWI_BY_KODE[log.dariTahap] ? `${ROMAWI_BY_KODE[log.dariTahap]} — ${TAHAP_BY_KODE[log.dariTahap]?.label}` : (TAHAP_BY_KODE[log.dariTahap]?.label ?? log.dariTahap)} &rarr;{" "}
@@ -1846,7 +1992,7 @@ function DasborPage({
   );
 }
 
-function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, canEdit }) {
+function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, onEditTanggalAwal, onEditLogTanggal, canEdit }) {
   const usulanLogs = logs.filter((l) => l.usulanKode === usulan.kode);
   const posisi = POSISI_BOLA_BY_KODE[usulan.posisiBola];
   const tahap = TAHAP_BY_KODE[usulan.tahapSaatIni];
@@ -1916,7 +2062,13 @@ function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, can
 
       <div>
         <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Lini Masa</h3>
-        <Timeline usulan={usulan} logs={usulanLogs} />
+        <Timeline
+          usulan={usulan}
+          logs={usulanLogs}
+          canEdit={canEdit && !usulan.deletedAt}
+          onEditTanggalAwal={onEditTanggalAwal}
+          onEditLogTanggal={onEditLogTanggal}
+        />
       </div>
 
       <div>
@@ -2542,6 +2694,65 @@ function AppShell() {
     return { ok: true };
   };
 
+  // Perbaikan tanggal tahap retroaktif (mis. saat setup awal): batas kronologis diambil
+  // dari urutan kemunculan asli logs usulan tersebut, bukan urutan tampilan Timeline.
+  const handleEditTanggalUsulanAwal = (usulanKode, newTanggal) => {
+    const usulan = usulanList.find((u) => u.kode === usulanKode);
+    if (!usulan) return { ok: false, error: "Usulan tidak ditemukan." };
+    const usulanLogs = logs.filter((l) => l.usulanKode === usulanKode);
+    const validation = validateTanggalEdit({
+      newTanggal,
+      prevTanggal: null,
+      nextTanggal: usulanLogs.length > 0 ? usulanLogs[0].tanggal : null,
+      todayIso: toIsoDate(today),
+    });
+    if (!validation.ok) return validation;
+
+    setUsulanList((prev) =>
+      prev.map((u) =>
+        u.kode === usulanKode
+          ? {
+              ...u,
+              tanggalUsulanAwal: newTanggal,
+              tanggalUsulanAwalEditedAt: toIsoDate(today),
+              tanggalUsulanAwalEditedBy: ROLE_LABEL[role],
+            }
+          : u,
+      ),
+    );
+    return { ok: true };
+  };
+
+  const handleEditLogTanggal = (logId, newTanggal) => {
+    const log = logs.find((l) => l.id === logId);
+    if (!log) return { ok: false, error: "Entri tidak ditemukan." };
+    const usulan = usulanList.find((u) => u.kode === log.usulanKode);
+    const usulanLogs = logs.filter((l) => l.usulanKode === log.usulanKode);
+    const idx = usulanLogs.findIndex((l) => l.id === logId);
+    const validation = validateTanggalEdit({
+      newTanggal,
+      prevTanggal: idx === 0 ? (usulan?.tanggalUsulanAwal ?? null) : usulanLogs[idx - 1].tanggal,
+      nextTanggal: idx === usulanLogs.length - 1 ? null : usulanLogs[idx + 1].tanggal,
+      todayIso: toIsoDate(today),
+    });
+    if (!validation.ok) return validation;
+
+    const editedIso = toIsoDate(today);
+    setLogs((prev) =>
+      prev.map((l) =>
+        l.id === logId ? { ...l, tanggal: newTanggal, tanggalEditedAt: editedIso, tanggalEditedBy: ROLE_LABEL[role] } : l,
+      ),
+    );
+    // Log paling akhir (urutan asli) adalah transisi yang membentuk tahapSaatIni saat ini,
+    // jadi tanggalMasukTahap harus ikut disinkronkan agar umur/overdue tetap akurat.
+    if (idx === usulanLogs.length - 1) {
+      setUsulanList((prev) =>
+        prev.map((u) => (u.kode === log.usulanKode ? { ...u, tanggalMasukTahap: newTanggal } : u)),
+      );
+    }
+    return { ok: true };
+  };
+
   const handleDeleteUsulan = (kode) => {
     const tanggalIso = toIsoDate(today);
     setUsulanList((prev) =>
@@ -2673,6 +2884,8 @@ function AppShell() {
                     logs={logs}
                     onBack={() => navigate("/")}
                     onTransition={(toTahap, keterangan, manual) => handleTransition(usulan, toTahap, keterangan, manual)}
+                    onEditTanggalAwal={(newTanggal) => handleEditTanggalUsulanAwal(usulan.kode, newTanggal)}
+                    onEditLogTanggal={handleEditLogTanggal}
                     canEdit={canEditDetail}
                   />
                 );
