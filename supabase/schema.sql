@@ -83,3 +83,18 @@ begin
     execute format('create policy "open update" on public.%I for update to anon, authenticated using (true) with check (true)', t);
   end loop;
 end $$;
+
+-- Realtime: perubahan langsung tampil di perangkat lain tanpa muat ulang.
+-- Aman dijalankan ulang (tabel yang sudah terdaftar dilewati).
+do $$
+declare t text;
+begin
+  foreach t in array array['usulan', 'dokumen', 'logs'] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;

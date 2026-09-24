@@ -2263,6 +2263,11 @@ export default function App() {
   );
 }
 
+function upsertByKey(list, row, key) {
+  const idx = list.findIndex((item) => String(item[key]) === String(row[key]));
+  return idx === -1 ? [...list, row] : list.map((item, i) => (i === idx ? row : item));
+}
+
 function AppShell() {
   const today = useMemo(() => new Date(), []);
   const [location, navigate] = useLocation();
@@ -2282,21 +2287,41 @@ function AppShell() {
   const [loadState, setLoadState] = useState({ status: "loading", error: null });
   const [actionError, setActionError] = useState(null);
 
+  const applyData = (data) => {
+    setUsulanList(data.usulanList);
+    setDokumenList(data.dokumenList);
+    setLogs(data.logs);
+  };
+
   const loadData = async () => {
     setLoadState({ status: "loading", error: null });
     try {
-      const data = await db.fetchAll();
-      setUsulanList(data.usulanList);
-      setDokumenList(data.dokumenList);
-      setLogs(data.logs);
+      applyData(await db.fetchAll());
       setLoadState({ status: "ready", error: null });
     } catch (err) {
       setLoadState({ status: "error", error: err.message });
     }
   };
 
+  // Baris baru atau yang berubah (dari handler sendiri maupun dari perangkat lain lewat
+  // Realtime) digabung berdasarkan kunci, sehingga gema Realtime tidak menduplikasi baris.
+  const upsertUsulan = (row) => setUsulanList((prev) => upsertByKey(prev, row, "kode"));
+  const upsertDokumen = (row) => setDokumenList((prev) => upsertByKey(prev, row, "id"));
+  const upsertLog = (row) => setLogs((prev) => upsertByKey(prev, row, "id").sort((a, b) => a.id - b.id));
+
   useEffect(() => {
+    const unsubscribe = db.subscribeToChanges({ onUsulan: upsertUsulan, onDokumen: upsertDokumen, onLog: upsertLog });
     loadData();
+    // Perangkat yang tertidur bisa melewatkan event Realtime; muat ulang diam-diam saat tab
+    // kembali terlihat (tanpa status "loading", agar isian formulir tidak hilang).
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") db.fetchAll().then(applyData).catch(() => {});
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    return () => {
+      unsubscribe();
+      document.removeEventListener("visibilitychange", handleVisible);
+    };
   }, []);
 
   const [filters, setFilters] = useState({ unorKode: "", tahap: "", jenisPerubahan: "", posisiBola: "" });
@@ -2340,7 +2365,6 @@ function AppShell() {
   // Setiap handler menulis ke Supabase lebih dulu, lalu memasukkan baris hasil simpan
   // ke state lokal. Kegagalan dikembalikan sebagai { ok: false, error } ke pemanggil.
   const saveError = (err) => ({ ok: false, error: `Gagal menyimpan ke server: ${err.message}` });
-  const replaceUsulan = (saved) => setUsulanList((prev) => prev.map((u) => (u.kode === saved.kode ? saved : u)));
 
   const handleAddUsulan = async ({ judul, unorKode, unitTerdampak, jenisPerubahan }) => {
     try {
@@ -2363,7 +2387,7 @@ function AppShell() {
         deletedAt: null,
         deletedBy: null,
       });
-      setUsulanList((prev) => [...prev, saved]);
+      upsertUsulan(saved);
       return { ok: true };
     } catch (err) {
       return saveError(err);
@@ -2383,7 +2407,7 @@ function AppShell() {
         validatorNama: "",
         tanggalValidasi: "",
       });
-      setDokumenList((prev) => [...prev, saved]);
+      upsertDokumen(saved);
       return { ok: true };
     } catch (err) {
       return saveError(err);
@@ -2398,7 +2422,7 @@ function AppShell() {
         validatorNama,
         tanggalValidasi: toIsoDate(today),
       });
-      setDokumenList((prev) => prev.map((d) => (String(d.id) === String(saved.id) ? saved : d)));
+      upsertDokumen(saved);
       return { ok: true };
     } catch (err) {
       return saveError(err);
@@ -2412,8 +2436,8 @@ function AppShell() {
     try {
       const savedLog = await db.insertLog(result.logEntry);
       const savedUsulan = await db.updateUsulan(usulan.kode, result.usulanPatch);
-      setLogs((prev) => [...prev, savedLog]);
-      replaceUsulan(savedUsulan);
+      upsertLog(savedLog);
+      upsertUsulan(savedUsulan);
       return { ok: true };
     } catch (err) {
       return saveError(err);
@@ -2440,7 +2464,7 @@ function AppShell() {
         tanggalUsulanAwalEditedAt: toIsoDate(today),
         tanggalUsulanAwalEditedBy: ROLE_LABEL[role],
       });
-      replaceUsulan(saved);
+      upsertUsulan(saved);
       return { ok: true };
     } catch (err) {
       return saveError(err);
@@ -2467,11 +2491,11 @@ function AppShell() {
         tanggalEditedAt: toIsoDate(today),
         tanggalEditedBy: ROLE_LABEL[role],
       });
-      setLogs((prev) => prev.map((l) => (l.id === logId ? savedLog : l)));
+      upsertLog(savedLog);
       // Log paling akhir (urutan asli) adalah transisi yang membentuk tahapSaatIni saat ini,
       // jadi tanggalMasukTahap harus ikut disinkronkan agar umur/overdue tetap akurat.
       if (idx === usulanLogs.length - 1) {
-        replaceUsulan(await db.updateUsulan(log.usulanKode, { tanggalMasukTahap: newTanggal }));
+        upsertUsulan(await db.updateUsulan(log.usulanKode, { tanggalMasukTahap: newTanggal }));
       }
       return { ok: true };
     } catch (err) {
@@ -2481,7 +2505,7 @@ function AppShell() {
 
   const handleDeleteUsulan = async (kode) => {
     try {
-      replaceUsulan(await db.updateUsulan(kode, { deletedAt: toIsoDate(today), deletedBy: ROLE_LABEL[role] }));
+      upsertUsulan(await db.updateUsulan(kode, { deletedAt: toIsoDate(today), deletedBy: ROLE_LABEL[role] }));
       return { ok: true };
     } catch (err) {
       return saveError(err);
@@ -2490,7 +2514,7 @@ function AppShell() {
 
   const handleRestoreUsulan = async (kode) => {
     try {
-      replaceUsulan(await db.updateUsulan(kode, { deletedAt: null, deletedBy: null }));
+      upsertUsulan(await db.updateUsulan(kode, { deletedAt: null, deletedBy: null }));
       return { ok: true };
     } catch (err) {
       return saveError(err);

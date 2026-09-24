@@ -74,3 +74,17 @@ export async function insertLog(log) {
 export async function updateLog(id, patch) {
   return fromRow(unwrap(await client().from("logs").update(toRow(patch)).eq("id", id).select().single()));
 }
+
+// Perubahan dari perangkat lain (Supabase Realtime). Mengembalikan fungsi untuk berhenti berlangganan.
+export function subscribeToChanges({ onUsulan, onDokumen, onLog }) {
+  if (!supabase) return () => {};
+  const handlers = { usulan: [onUsulan, fromUsulanRow], dokumen: [onDokumen, fromDokumenRow], logs: [onLog, fromRow] };
+  let channel = supabase.channel("dashboardmon-changes");
+  for (const [table, [callback, map]] of Object.entries(handlers)) {
+    channel = channel.on("postgres_changes", { event: "*", schema: "public", table }, (payload) => {
+      if (payload.new && Object.keys(payload.new).length > 0) callback(map(payload.new));
+    });
+  }
+  channel.subscribe();
+  return () => supabase.removeChannel(channel);
+}
