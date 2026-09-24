@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Redirect, Route, Router, Switch, useLocation } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
+import * as db from "./db.js";
 
 // =====================================================================
 // KONSTANTA UNIT ORGANISASI (Permen PU 1/2024)
@@ -498,308 +499,6 @@ function computeUnitRanking(usulanList) {
     .map(([unit, count]) => ({ unit, count }))
     .sort((a, b) => b.count - a.count);
 }
-
-// =====================================================================
-// DATA CONTOH — 12 usulan lintas tahap, jenis perubahan, dan unit organisasi
-// =====================================================================
-
-const initialUsulan = [
-  {
-    kode: "SETJEN-2026-001",
-    judul: "Pembentukan Unit Pengelola Data dan Informasi pada Biro Umum",
-    unorKode: "SETJEN",
-    unitTerdampak: ["Biro Umum"],
-    jenisPerubahan: "pembentukan",
-    tahapSaatIni: "T1",
-    posisiBola: "BKO",
-    putaran: 1,
-    tanggalMasukTahap: "2026-07-28",
-    tanggalUsulanAwal: "2026-07-28",
-    status: "aktif",
-    catatanTerakhir: "Surat usulan diterima, menunggu telaah awal.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "SDA-2026-002",
-    judul: "Perubahan Nomenklatur Direktorat Air Tanah dan Air Baku",
-    unorKode: "SDA",
-    unitTerdampak: ["Direktorat Air Tanah dan Air Baku"],
-    jenisPerubahan: "perubahan_nomenklatur",
-    tahapSaatIni: "T2",
-    posisiBola: "BKO",
-    putaran: 1,
-    tanggalMasukTahap: "2026-07-20",
-    tanggalUsulanAwal: "2026-07-05",
-    status: "aktif",
-    catatanTerakhir: "Naskah urgensi perlu dilengkapi data dukung analisis beban kerja.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "BM-2026-003",
-    judul:
-      "Penggabungan Direktorat Preservasi Jalan dan Jembatan Wilayah I dan Wilayah II",
-    unorKode: "BM",
-    unitTerdampak: [
-      "Direktorat Preservasi Jalan dan Jembatan Wilayah I",
-      "Direktorat Preservasi Jalan dan Jembatan Wilayah II",
-    ],
-    jenisPerubahan: "penggabungan",
-    tahapSaatIni: "T3",
-    posisiBola: "UNOR",
-    putaran: 2,
-    tanggalMasukTahap: "2026-06-15",
-    tanggalUsulanAwal: "2026-05-10",
-    status: "aktif",
-    catatanTerakhir: "Menunggu penyempurnaan naskah urgensi sesuai catatan validasi.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "CK-2026-004",
-    judul: "Penggabungan Direktorat Air Minum dan Direktorat Sanitasi",
-    unorKode: "CK",
-    unitTerdampak: ["Direktorat Air Minum", "Direktorat Sanitasi"],
-    jenisPerubahan: "penggabungan",
-    tahapSaatIni: "T4",
-    posisiBola: "PANRB",
-    putaran: 1,
-    tanggalMasukTahap: "2026-05-02",
-    tanggalUsulanAwal: "2026-04-01",
-    status: "aktif",
-    catatanTerakhir: "Menunggu jadwal rapat pembahasan bersama Kementerian PANRB.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "PS-2026-005",
-    judul: "Penghapusan Direktorat Infrastruktur Dukungan Pendidikan",
-    unorKode: "PS",
-    unitTerdampak: ["Direktorat Infrastruktur Dukungan Pendidikan"],
-    jenisPerubahan: "penghapusan",
-    tahapSaatIni: "T5",
-    posisiBola: "BKO",
-    putaran: 1,
-    tanggalMasukTahap: "2026-07-13",
-    tanggalUsulanAwal: "2026-03-01",
-    status: "aktif",
-    catatanTerakhir: "Menunggu rancangan Peraturan Menteri dari tim penyusun.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "BK-2026-006",
-    judul: "Perubahan Tugas dan Fungsi Direktorat Pengadaan Jasa Konstruksi",
-    unorKode: "BK",
-    unitTerdampak: ["Direktorat Pengadaan Jasa Konstruksi"],
-    jenisPerubahan: "perubahan_tugas_fungsi",
-    tahapSaatIni: "T6",
-    posisiBola: "BKO",
-    putaran: 1,
-    tanggalMasukTahap: "2026-05-20",
-    tanggalUsulanAwal: "2026-02-01",
-    status: "aktif",
-    catatanTerakhir: "Sedang proses konsultasi publik dengan pemangku kepentingan terkait.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "PIPU-2026-007",
-    judul:
-      "Pembentukan Direktorat Baru melalui Pemekaran Direktorat Pelaksanaan Pembiayaan Infrastruktur Bina Marga",
-    unorKode: "PIPU",
-    unitTerdampak: ["Direktorat Pelaksanaan Pembiayaan Infrastruktur Bina Marga"],
-    jenisPerubahan: "pembentukan",
-    tahapSaatIni: "T7",
-    posisiBola: "KUMHAM",
-    putaran: 1,
-    tanggalMasukTahap: "2026-06-01",
-    tanggalUsulanAwal: "2025-11-01",
-    status: "aktif",
-    catatanTerakhir: "Dalam proses harmonisasi rancangan Peraturan Menteri bersama Kementerian Hukum dan HAM.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "ITJEN-2026-008",
-    judul: "Perubahan Nomenklatur Inspektorat VI menjadi Inspektorat Investigasi",
-    unorKode: "ITJEN",
-    unitTerdampak: ["Inspektorat VI"],
-    jenisPerubahan: "perubahan_nomenklatur",
-    tahapSaatIni: "T8",
-    posisiBola: "KUMHAM",
-    putaran: 1,
-    tanggalMasukTahap: "2026-06-20",
-    tanggalUsulanAwal: "2025-09-01",
-    status: "aktif",
-    catatanTerakhir: "Menunggu penetapan dan pengundangan oleh Kementerian Hukum dan HAM.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "SDA-2026-009",
-    judul: "Penggabungan Direktorat Sungai dan Pantai dengan Direktorat Irigasi dan Rawa",
-    unorKode: "SDA",
-    unitTerdampak: ["Direktorat Sungai dan Pantai", "Direktorat Irigasi dan Rawa"],
-    jenisPerubahan: "penggabungan",
-    tahapSaatIni: "T1",
-    posisiBola: "BKO",
-    putaran: 3,
-    tanggalMasukTahap: "2026-07-30",
-    tanggalUsulanAwal: "2026-01-05",
-    status: "aktif",
-    catatanTerakhir: "Surat usulan versi ketiga diterima, menunggu telaah ulang.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "BPIW-2026-010",
-    judul: "Pembentukan Pusat Pengembangan Infrastruktur Pekerjaan Umum Wilayah IV",
-    unorKode: "BPIW",
-    unitTerdampak: ["Pusat Pengembangan Infrastruktur Pekerjaan Umum Wilayah III"],
-    jenisPerubahan: "pembentukan",
-    tahapSaatIni: "T2",
-    posisiBola: "BKO",
-    putaran: 1,
-    tanggalMasukTahap: "2026-08-04",
-    tanggalUsulanAwal: "2026-08-01",
-    status: "aktif",
-    catatanTerakhir: "Dokumen naskah urgensi sedang dalam proses validasi.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "BPSDM-2026-011",
-    judul: "Perubahan Tugas dan Fungsi Pusat Pengelolaan Talenta",
-    unorKode: "BPSDM",
-    unitTerdampak: ["Pusat Pengelolaan Talenta"],
-    jenisPerubahan: "perubahan_tugas_fungsi",
-    tahapSaatIni: "T8",
-    posisiBola: "KUMHAM",
-    putaran: 1,
-    tanggalMasukTahap: "2026-06-15",
-    tanggalUsulanAwal: "2025-06-01",
-    status: "selesai",
-    catatanTerakhir: "Peraturan Menteri telah diundangkan, perubahan organisasi berlaku efektif.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-  {
-    kode: "BM-2026-012",
-    judul: "Perubahan Nomenklatur Direktorat Preservasi Jalan dan Jembatan Wilayah I",
-    unorKode: "BM",
-    unitTerdampak: ["Direktorat Preservasi Jalan dan Jembatan Wilayah I"],
-    jenisPerubahan: "perubahan_nomenklatur",
-    tahapSaatIni: "T3",
-    posisiBola: "UNOR",
-    putaran: 2,
-    tanggalMasukTahap: "2026-06-25",
-    tanggalUsulanAwal: "2026-06-01",
-    status: "aktif",
-    catatanTerakhir: "Menunggu penyempurnaan dokumen sesuai catatan Biro KOTL.",
-    deletedAt: null,
-    deletedBy: null,
-  },
-];
-
-let dokumenIdSeq = 0;
-const nextDokumenId = () => `D${String((dokumenIdSeq += 1)).padStart(3, "0")}`;
-
-const initialDokumen = [
-  { usulanKode: "SETJEN-2026-001", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-07-28", statusValidasi: "diterima", catatanValidasi: "", validatorNama: "", tanggalValidasi: "" },
-
-  { usulanKode: "SDA-2026-002", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-07-05", statusValidasi: "valid", catatanValidasi: "Dokumen lengkap dan sesuai format.", validatorNama: "Ahmad Fauzi", tanggalValidasi: "2026-07-18" },
-  { usulanKode: "SDA-2026-002", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2026-07-19", statusValidasi: "perlu_perbaikan", catatanValidasi: "Analisis beban kerja belum memadai, perlu dilengkapi data dukung.", validatorNama: "Ahmad Fauzi", tanggalValidasi: "2026-07-22" },
-
-  { usulanKode: "BM-2026-003", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-05-12", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Siti Rahma", tanggalValidasi: "2026-05-18" },
-  { usulanKode: "BM-2026-003", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2026-05-25", statusValidasi: "perlu_perbaikan", catatanValidasi: "Kajian dampak organisasi terhadap dua wilayah kerja belum jelas.", validatorNama: "Siti Rahma", tanggalValidasi: "2026-06-14" },
-
-  { usulanKode: "CK-2026-004", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-04-03", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Bambang Prakoso", tanggalValidasi: "2026-04-08" },
-  { usulanKode: "CK-2026-004", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2026-04-15", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Bambang Prakoso", tanggalValidasi: "2026-04-28" },
-
-  { usulanKode: "PS-2026-005", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-03-03", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Dewi Anggraini", tanggalValidasi: "2026-03-08" },
-  { usulanKode: "PS-2026-005", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2026-03-15", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Dewi Anggraini", tanggalValidasi: "2026-03-22" },
-
-  { usulanKode: "BK-2026-006", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-02-03", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Eko Wibowo", tanggalValidasi: "2026-02-08" },
-  { usulanKode: "BK-2026-006", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2026-02-15", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Eko Wibowo", tanggalValidasi: "2026-02-22" },
-  { usulanKode: "BK-2026-006", putaran: 1, jenis: "rancangan_permen", versi: 1, tanggalTerima: "2026-03-10", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Eko Wibowo", tanggalValidasi: "2026-03-18" },
-
-  { usulanKode: "PIPU-2026-007", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2025-11-05", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Fitri Handayani", tanggalValidasi: "2025-11-12" },
-  { usulanKode: "PIPU-2026-007", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2025-11-20", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Fitri Handayani", tanggalValidasi: "2025-11-28" },
-  { usulanKode: "PIPU-2026-007", putaran: 1, jenis: "rancangan_permen", versi: 1, tanggalTerima: "2025-12-15", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Fitri Handayani", tanggalValidasi: "2025-12-22" },
-
-  { usulanKode: "ITJEN-2026-008", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2025-09-05", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Guntur Saputra", tanggalValidasi: "2025-09-12" },
-  { usulanKode: "ITJEN-2026-008", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2025-09-20", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Guntur Saputra", tanggalValidasi: "2025-09-28" },
-  { usulanKode: "ITJEN-2026-008", putaran: 1, jenis: "rancangan_permen", versi: 1, tanggalTerima: "2025-10-25", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Guntur Saputra", tanggalValidasi: "2025-11-02" },
-
-  { usulanKode: "SDA-2026-009", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-01-06", statusValidasi: "perlu_perbaikan", catatanValidasi: "Kajian penggabungan dua direktorat belum memuat analisis risiko.", validatorNama: "Ahmad Fauzi", tanggalValidasi: "2026-01-18" },
-  { usulanKode: "SDA-2026-009", putaran: 2, jenis: "surat_usulan", versi: 2, tanggalTerima: "2026-02-16", statusValidasi: "perlu_perbaikan", catatanValidasi: "Masih diperlukan kajian dampak terhadap layanan operasional.", validatorNama: "Ahmad Fauzi", tanggalValidasi: "2026-02-28" },
-  { usulanKode: "SDA-2026-009", putaran: 3, jenis: "surat_usulan", versi: 3, tanggalTerima: "2026-07-30", statusValidasi: "diterima", catatanValidasi: "", validatorNama: "", tanggalValidasi: "" },
-
-  { usulanKode: "BPIW-2026-010", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-08-01", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Hesti Kurniawati", tanggalValidasi: "2026-08-03" },
-  { usulanKode: "BPIW-2026-010", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2026-08-05", statusValidasi: "dalam_validasi", catatanValidasi: "", validatorNama: "", tanggalValidasi: "" },
-
-  { usulanKode: "BPSDM-2026-011", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2025-06-05", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Ahmad Fauzi", tanggalValidasi: "2025-06-12" },
-  { usulanKode: "BPSDM-2026-011", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2025-06-20", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Ahmad Fauzi", tanggalValidasi: "2025-06-28" },
-  { usulanKode: "BPSDM-2026-011", putaran: 1, jenis: "rancangan_permen", versi: 1, tanggalTerima: "2025-07-10", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Ahmad Fauzi", tanggalValidasi: "2025-07-18" },
-
-  { usulanKode: "BM-2026-012", putaran: 1, jenis: "surat_usulan", versi: 1, tanggalTerima: "2026-06-02", statusValidasi: "valid", catatanValidasi: "", validatorNama: "Siti Rahma", tanggalValidasi: "2026-06-06" },
-  { usulanKode: "BM-2026-012", putaran: 1, jenis: "naskah_urgensi", versi: 1, tanggalTerima: "2026-06-10", statusValidasi: "perlu_perbaikan", catatanValidasi: "Perubahan nomenklatur belum disertai dasar pertimbangan yang memadai.", validatorNama: "Siti Rahma", tanggalValidasi: "2026-06-24" },
-].map((d) => ({ ...d, id: nextDokumenId() }));
-
-let logIdSeq = 0;
-const nextLogId = () => `L${String((logIdSeq += 1)).padStart(3, "0")}`;
-
-const initialLogs = [
-  { usulanKode: "SDA-2026-002", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-07-20", keterangan: "Surat usulan disetujui, dilanjutkan ke tahap validasi dokumen.", olehSiapa: "Pelaksana Biro KOTL" },
-
-  { usulanKode: "BM-2026-003", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-05-20", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BM-2026-003", dariTahap: "T2", keTahap: "T3", dariPosisiBola: "BKO", kePosisiBola: "UNOR", putaran: 2, tanggal: "2026-06-15", keterangan: "Naskah urgensi belum memadai, dikembalikan untuk disempurnakan.", olehSiapa: "Pelaksana Biro KOTL" },
-
-  { usulanKode: "CK-2026-004", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-04-10", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "CK-2026-004", dariTahap: "T2", keTahap: "T4", dariPosisiBola: "BKO", kePosisiBola: "PANRB", putaran: 1, tanggal: "2026-05-02", keterangan: "Seluruh dokumen valid, diusulkan untuk dijadwalkan rapat bersama Kementerian PANRB.", olehSiapa: "Pelaksana Biro KOTL" },
-
-  { usulanKode: "PS-2026-005", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-03-10", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "PS-2026-005", dariTahap: "T2", keTahap: "T4", dariPosisiBola: "BKO", kePosisiBola: "PANRB", putaran: 1, tanggal: "2026-03-25", keterangan: "Seluruh dokumen valid.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "PS-2026-005", dariTahap: "T4", keTahap: "T5", dariPosisiBola: "PANRB", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-07-13", keterangan: "Hasil rapat PANRB: lanjut ke pembahasan rancangan Peraturan Menteri.", olehSiapa: "Kementerian PANRB" },
-
-  { usulanKode: "BK-2026-006", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-02-10", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BK-2026-006", dariTahap: "T2", keTahap: "T4", dariPosisiBola: "BKO", kePosisiBola: "PANRB", putaran: 1, tanggal: "2026-02-24", keterangan: "Seluruh dokumen valid.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BK-2026-006", dariTahap: "T4", keTahap: "T5", dariPosisiBola: "PANRB", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-03-05", keterangan: "Hasil rapat PANRB: lanjut ke pembahasan rancangan Peraturan Menteri.", olehSiapa: "Kementerian PANRB" },
-  { usulanKode: "BK-2026-006", dariTahap: "T5", keTahap: "T6", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-05-20", keterangan: "Rancangan Peraturan Menteri selesai dibahas, dilanjutkan ke konsultasi publik.", olehSiapa: "Pelaksana Biro KOTL" },
-
-  { usulanKode: "PIPU-2026-007", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-11-15", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "PIPU-2026-007", dariTahap: "T2", keTahap: "T4", dariPosisiBola: "BKO", kePosisiBola: "PANRB", putaran: 1, tanggal: "2025-12-01", keterangan: "Seluruh dokumen valid.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "PIPU-2026-007", dariTahap: "T4", keTahap: "T5", dariPosisiBola: "PANRB", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-12-20", keterangan: "Hasil rapat PANRB: lanjut ke pembahasan rancangan Peraturan Menteri.", olehSiapa: "Kementerian PANRB" },
-  { usulanKode: "PIPU-2026-007", dariTahap: "T5", keTahap: "T6", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-02-10", keterangan: "Rancangan selesai dibahas, dilanjutkan ke konsultasi publik.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "PIPU-2026-007", dariTahap: "T6", keTahap: "T7", dariPosisiBola: "BKO", kePosisiBola: "KUMHAM", putaran: 1, tanggal: "2026-06-01", keterangan: "Konsultasi publik selesai, dokumen diteruskan untuk harmonisasi.", olehSiapa: "Pelaksana Biro KOTL" },
-
-  { usulanKode: "ITJEN-2026-008", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-09-15", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "ITJEN-2026-008", dariTahap: "T2", keTahap: "T4", dariPosisiBola: "BKO", kePosisiBola: "PANRB", putaran: 1, tanggal: "2025-10-01", keterangan: "Seluruh dokumen valid.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "ITJEN-2026-008", dariTahap: "T4", keTahap: "T5", dariPosisiBola: "PANRB", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-10-20", keterangan: "Hasil rapat PANRB: lanjut ke pembahasan rancangan Peraturan Menteri.", olehSiapa: "Kementerian PANRB" },
-  { usulanKode: "ITJEN-2026-008", dariTahap: "T5", keTahap: "T6", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-12-15", keterangan: "Rancangan selesai dibahas, dilanjutkan ke konsultasi publik.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "ITJEN-2026-008", dariTahap: "T6", keTahap: "T7", dariPosisiBola: "BKO", kePosisiBola: "KUMHAM", putaran: 1, tanggal: "2026-03-01", keterangan: "Konsultasi publik selesai, dokumen diteruskan untuk harmonisasi.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "ITJEN-2026-008", dariTahap: "T7", keTahap: "T8", dariPosisiBola: "KUMHAM", kePosisiBola: "KUMHAM", putaran: 1, tanggal: "2026-06-20", keterangan: "Harmonisasi selesai, dilanjutkan ke tahap penetapan dan pengundangan.", olehSiapa: "Kementerian Hukum dan HAM" },
-
-  { usulanKode: "SDA-2026-009", dariTahap: "T1", keTahap: "T3", dariPosisiBola: "BKO", kePosisiBola: "UNOR", putaran: 2, tanggal: "2026-01-20", keterangan: "Surat usulan ditolak, perlu disusun ulang.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "SDA-2026-009", dariTahap: "T3", keTahap: "T1", dariPosisiBola: "UNOR", kePosisiBola: "BKO", putaran: 2, tanggal: "2026-02-15", keterangan: "Surat usulan versi kedua diajukan.", olehSiapa: "Direktorat Jenderal Sumber Daya Air" },
-  { usulanKode: "SDA-2026-009", dariTahap: "T1", keTahap: "T3", dariPosisiBola: "BKO", kePosisiBola: "UNOR", putaran: 3, tanggal: "2026-03-01", keterangan: "Surat usulan kembali ditolak, masih terdapat kekurangan substansi.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "SDA-2026-009", dariTahap: "T3", keTahap: "T1", dariPosisiBola: "UNOR", kePosisiBola: "BKO", putaran: 3, tanggal: "2026-07-30", keterangan: "Surat usulan versi ketiga diajukan.", olehSiapa: "Direktorat Jenderal Sumber Daya Air" },
-
-  { usulanKode: "BPIW-2026-010", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-08-04", keterangan: "Surat usulan disetujui, dilanjutkan ke validasi dokumen.", olehSiapa: "Pelaksana Biro KOTL" },
-
-  { usulanKode: "BPSDM-2026-011", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-06-15", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BPSDM-2026-011", dariTahap: "T2", keTahap: "T4", dariPosisiBola: "BKO", kePosisiBola: "PANRB", putaran: 1, tanggal: "2025-07-01", keterangan: "Seluruh dokumen valid.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BPSDM-2026-011", dariTahap: "T4", keTahap: "T5", dariPosisiBola: "PANRB", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-07-20", keterangan: "Hasil rapat PANRB: lanjut ke pembahasan rancangan Peraturan Menteri.", olehSiapa: "Kementerian PANRB" },
-  { usulanKode: "BPSDM-2026-011", dariTahap: "T5", keTahap: "T6", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2025-09-10", keterangan: "Rancangan selesai dibahas, dilanjutkan ke konsultasi publik.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BPSDM-2026-011", dariTahap: "T6", keTahap: "T7", dariPosisiBola: "BKO", kePosisiBola: "KUMHAM", putaran: 1, tanggal: "2025-11-05", keterangan: "Konsultasi publik selesai, dokumen diteruskan untuk harmonisasi.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BPSDM-2026-011", dariTahap: "T7", keTahap: "T8", dariPosisiBola: "KUMHAM", kePosisiBola: "KUMHAM", putaran: 1, tanggal: "2026-02-01", keterangan: "Harmonisasi selesai, dilanjutkan ke tahap penetapan dan pengundangan.", olehSiapa: "Kementerian Hukum dan HAM" },
-  { usulanKode: "BPSDM-2026-011", dariTahap: "T8", keTahap: "SELESAI", dariPosisiBola: "KUMHAM", kePosisiBola: "KUMHAM", putaran: 1, tanggal: "2026-06-15", keterangan: "Peraturan Menteri ditetapkan dan diundangkan.", olehSiapa: "Kementerian Hukum dan HAM" },
-
-  { usulanKode: "BM-2026-012", dariTahap: "T1", keTahap: "T2", dariPosisiBola: "BKO", kePosisiBola: "BKO", putaran: 1, tanggal: "2026-06-08", keterangan: "Surat usulan disetujui.", olehSiapa: "Pelaksana Biro KOTL" },
-  { usulanKode: "BM-2026-012", dariTahap: "T2", keTahap: "T3", dariPosisiBola: "BKO", kePosisiBola: "UNOR", putaran: 2, tanggal: "2026-06-25", keterangan: "Naskah urgensi perlu diperbaiki, dikembalikan ke unit organisasi.", olehSiapa: "Pelaksana Biro KOTL" },
-].map((l) => ({ ...l, id: nextLogId() }));
 
 // =====================================================================
 // KOMPONEN PRESENTASI
@@ -1410,8 +1109,8 @@ function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogT
     returnFocusRef.current?.focus?.();
   };
 
-  const saveEdit = (persist) => {
-    const result = persist(draftValue);
+  const saveEdit = async (persist) => {
+    const result = await persist(draftValue);
     if (!result || !result.ok) {
       setDraftError(result?.error ?? "Tanggal tidak valid.");
       return;
@@ -1635,8 +1334,8 @@ function TransitionActions({ usulan, onTransition }) {
     setError("");
   };
 
-  const handleConfirm = (toTahap) => {
-    const result = onTransition(toTahap, keterangan);
+  const handleConfirm = async (toTahap) => {
+    const result = await onTransition(toTahap, keterangan);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -1740,8 +1439,8 @@ function BypassTransitionPanel({ usulan, onTransition }) {
     setError("");
   };
 
-  const handleConfirm = () => {
-    const result = onTransition(toTahap, keterangan, true);
+  const handleConfirm = async () => {
+    const result = await onTransition(toTahap, keterangan, true);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -2086,14 +1785,18 @@ function TambahUsulanForm({ onAddUsulan }) {
   const [jenisPerubahan, setJenisPerubahan] = useState(JENIS_PERUBAHAN_LIST[0].kode);
   const [feedback, setFeedback] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
     if (!judul.trim() || !unorKode || unitTerdampak.length === 0) {
       setFeedback({ type: "error", text: "Judul, unit organisasi, dan minimal satu unit terdampak wajib diisi." });
       return;
     }
-    onAddUsulan({ judul: judul.trim(), unorKode, unitTerdampak, jenisPerubahan });
+    const result = await onAddUsulan({ judul: judul.trim(), unorKode, unitTerdampak, jenisPerubahan });
+    if (!result.ok) {
+      setFeedback({ type: "error", text: result.error });
+      return;
+    }
     setJudul("");
     setUnorKode("");
     setUnitTerdampak([]);
@@ -2155,14 +1858,18 @@ function CatatDokumenForm({ usulanList, onAddDokumen }) {
 
   const selectedUsulan = aktifList.find((u) => u.kode === usulanKode);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
     if (!usulanKode || !tanggalTerima) {
       setFeedback({ type: "error", text: "Usulan dan tanggal terima wajib diisi." });
       return;
     }
-    onAddDokumen({ usulanKode, putaran: selectedUsulan.putaran, jenis, tanggalTerima });
+    const result = await onAddDokumen({ usulanKode, putaran: selectedUsulan.putaran, jenis, tanggalTerima });
+    if (!result.ok) {
+      setFeedback({ type: "error", text: result.error });
+      return;
+    }
     setTanggalTerima("");
     setFeedback({ type: "success", text: "Penerimaan dokumen berhasil dicatat." });
   };
@@ -2216,18 +1923,22 @@ function CatatValidasiForm({ usulanList, dokumenList, onValidateDokumen }) {
     ? dokumenList.filter((d) => d.usulanKode === usulanKode && d.putaran === selectedUsulan.putaran)
     : [];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
     if (!dokumenId || !validatorNama.trim()) {
       setFeedback({ type: "error", text: "Dokumen dan nama validator wajib diisi." });
       return;
     }
-    onValidateDokumen(dokumenId, {
+    const result = await onValidateDokumen(dokumenId, {
       statusValidasi,
       catatanValidasi: catatanValidasi.trim(),
       validatorNama: validatorNama.trim(),
     });
+    if (!result.ok) {
+      setFeedback({ type: "error", text: result.error });
+      return;
+    }
     setCatatanValidasi("");
     setFeedback({ type: "success", text: "Hasil validasi berhasil dicatat." });
   };
@@ -2552,21 +2263,6 @@ export default function App() {
   );
 }
 
-function usePersistedState(key, initialValue) {
-  const [state, setState] = useState(() => {
-    try {
-      const stored = localStorage.getItem(key);
-      return stored !== null ? JSON.parse(stored) : initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(state));
-  }, [key, state]);
-  return [state, setState];
-}
-
 function AppShell() {
   const today = useMemo(() => new Date(), []);
   const [location, navigate] = useLocation();
@@ -2580,17 +2276,32 @@ function AppShell() {
   const [role, setRole] = useState("kepala_biro");
   const [unorViewingAs, setUnorViewingAs] = useState(UNIT_ORGANISASI[0].kode);
 
-  const [usulanList, setUsulanList] = usePersistedState("dashboardmon:usulanList", initialUsulan);
-  const [dokumenList, setDokumenList] = usePersistedState("dashboardmon:dokumenList", initialDokumen);
-  const [logs, setLogs] = usePersistedState("dashboardmon:logs", initialLogs);
+  const [usulanList, setUsulanList] = useState([]);
+  const [dokumenList, setDokumenList] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [loadState, setLoadState] = useState({ status: "loading", error: null });
+  const [actionError, setActionError] = useState(null);
+
+  const loadData = async () => {
+    setLoadState({ status: "loading", error: null });
+    try {
+      const data = await db.fetchAll();
+      setUsulanList(data.usulanList);
+      setDokumenList(data.dokumenList);
+      setLogs(data.logs);
+      setLoadState({ status: "ready", error: null });
+    } catch (err) {
+      setLoadState({ status: "error", error: err.message });
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const [filters, setFilters] = useState({ unorKode: "", tahap: "", jenisPerubahan: "", posisiBola: "" });
   const [sort, setSort] = useState({ field: "kode", direction: "asc" });
   const [deleteTarget, setDeleteTarget] = useState(null);
-
-  const [usulanSeq, setUsulanSeq] = usePersistedState("dashboardmon:usulanSeq", initialUsulan.length);
-  const [dokumenSeq, setDokumenSeq] = usePersistedState("dashboardmon:dokumenSeq", dokumenIdSeq);
-  const [logSeq, setLogSeq] = usePersistedState("dashboardmon:logSeq", logIdSeq);
 
   // "Cetak Ringkasan" triggers window.print() directly rather than navigating to a
   // route — CetakRingkasanPage stays mounted (hidden) at every route, shown only
@@ -2626,14 +2337,17 @@ function AppShell() {
 
   const deletedUsulanList = useMemo(() => usulanList.filter((u) => u.deletedAt), [usulanList]);
 
-  const handleAddUsulan = ({ judul, unorKode, unitTerdampak, jenisPerubahan }) => {
-    const seq = usulanSeq + 1;
-    setUsulanSeq(seq);
-    const kode = `${unorKode}-2026-${String(seq).padStart(3, "0")}`;
-    const tanggalIso = toIsoDate(today);
-    setUsulanList((prev) => [
-      ...prev,
-      {
+  // Setiap handler menulis ke Supabase lebih dulu, lalu memasukkan baris hasil simpan
+  // ke state lokal. Kegagalan dikembalikan sebagai { ok: false, error } ke pemanggil.
+  const saveError = (err) => ({ ok: false, error: `Gagal menyimpan ke server: ${err.message}` });
+  const replaceUsulan = (saved) => setUsulanList((prev) => prev.map((u) => (u.kode === saved.kode ? saved : u)));
+
+  const handleAddUsulan = async ({ judul, unorKode, unitTerdampak, jenisPerubahan }) => {
+    try {
+      const seq = await db.nextUsulanSeq();
+      const kode = `${unorKode}-2026-${String(seq).padStart(3, "0")}`;
+      const tanggalIso = toIsoDate(today);
+      const saved = await db.insertUsulan({
         kode,
         judul,
         unorKode,
@@ -2648,55 +2362,67 @@ function AppShell() {
         catatanTerakhir: "Usulan baru dicatat, menunggu telaah awal.",
         deletedAt: null,
         deletedBy: null,
-      },
-    ]);
+      });
+      setUsulanList((prev) => [...prev, saved]);
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
   };
 
-  const handleAddDokumen = ({ usulanKode, putaran, jenis, tanggalTerima }) => {
-    const seq = dokumenSeq + 1;
-    setDokumenSeq(seq);
-    setDokumenList((prev) => [
-      ...prev,
-      {
-        id: `D${String(seq).padStart(3, "0")}`,
+  const handleAddDokumen = async ({ usulanKode, putaran, jenis, tanggalTerima }) => {
+    try {
+      const saved = await db.insertDokumen({
         usulanKode,
         putaran,
         jenis,
-        versi: prev.filter((d) => d.usulanKode === usulanKode && d.putaran === putaran && d.jenis === jenis).length + 1,
+        versi: dokumenList.filter((d) => d.usulanKode === usulanKode && d.putaran === putaran && d.jenis === jenis).length + 1,
         tanggalTerima,
         statusValidasi: "diterima",
         catatanValidasi: "",
         validatorNama: "",
         tanggalValidasi: "",
-      },
-    ]);
+      });
+      setDokumenList((prev) => [...prev, saved]);
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
   };
 
-  const handleValidateDokumen = (dokumenId, { statusValidasi, catatanValidasi, validatorNama }) => {
-    const tanggalIso = toIsoDate(today);
-    setDokumenList((prev) =>
-      prev.map((d) =>
-        String(d.id) === String(dokumenId)
-          ? { ...d, statusValidasi, catatanValidasi, validatorNama, tanggalValidasi: tanggalIso }
-          : d,
-      ),
-    );
+  const handleValidateDokumen = async (dokumenId, { statusValidasi, catatanValidasi, validatorNama }) => {
+    try {
+      const saved = await db.updateDokumen(dokumenId, {
+        statusValidasi,
+        catatanValidasi,
+        validatorNama,
+        tanggalValidasi: toIsoDate(today),
+      });
+      setDokumenList((prev) => prev.map((d) => (String(d.id) === String(saved.id) ? saved : d)));
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
   };
 
-  const handleTransition = (usulan, toTahap, keterangan, manual = false) => {
+  const handleTransition = async (usulan, toTahap, keterangan, manual = false) => {
     const result = applyTransition(usulan, { toTahap, keterangan, olehSiapa: ROLE_LABEL[role], manual }, today);
     if (!result.ok) return result;
 
-    const seq = logSeq + 1;
-    setLogSeq(seq);
-    setUsulanList((prev) => prev.map((u) => (u.kode === usulan.kode ? { ...u, ...result.usulanPatch } : u)));
-    setLogs((prev) => [...prev, { ...result.logEntry, id: `L${String(seq).padStart(3, "0")}` }]);
-    return { ok: true };
+    try {
+      const savedLog = await db.insertLog(result.logEntry);
+      const savedUsulan = await db.updateUsulan(usulan.kode, result.usulanPatch);
+      setLogs((prev) => [...prev, savedLog]);
+      replaceUsulan(savedUsulan);
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
   };
 
   // Perbaikan tanggal tahap retroaktif (mis. saat setup awal): batas kronologis diambil
   // dari urutan kemunculan asli logs usulan tersebut, bukan urutan tampilan Timeline.
-  const handleEditTanggalUsulanAwal = (usulanKode, newTanggal) => {
+  const handleEditTanggalUsulanAwal = async (usulanKode, newTanggal) => {
     const usulan = usulanList.find((u) => u.kode === usulanKode);
     if (!usulan) return { ok: false, error: "Usulan tidak ditemukan." };
     const usulanLogs = logs.filter((l) => l.usulanKode === usulanKode);
@@ -2708,22 +2434,20 @@ function AppShell() {
     });
     if (!validation.ok) return validation;
 
-    setUsulanList((prev) =>
-      prev.map((u) =>
-        u.kode === usulanKode
-          ? {
-              ...u,
-              tanggalUsulanAwal: newTanggal,
-              tanggalUsulanAwalEditedAt: toIsoDate(today),
-              tanggalUsulanAwalEditedBy: ROLE_LABEL[role],
-            }
-          : u,
-      ),
-    );
-    return { ok: true };
+    try {
+      const saved = await db.updateUsulan(usulanKode, {
+        tanggalUsulanAwal: newTanggal,
+        tanggalUsulanAwalEditedAt: toIsoDate(today),
+        tanggalUsulanAwalEditedBy: ROLE_LABEL[role],
+      });
+      replaceUsulan(saved);
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
   };
 
-  const handleEditLogTanggal = (logId, newTanggal) => {
+  const handleEditLogTanggal = async (logId, newTanggal) => {
     const log = logs.find((l) => l.id === logId);
     if (!log) return { ok: false, error: "Entri tidak ditemukan." };
     const usulan = usulanList.find((u) => u.kode === log.usulanKode);
@@ -2737,31 +2461,40 @@ function AppShell() {
     });
     if (!validation.ok) return validation;
 
-    const editedIso = toIsoDate(today);
-    setLogs((prev) =>
-      prev.map((l) =>
-        l.id === logId ? { ...l, tanggal: newTanggal, tanggalEditedAt: editedIso, tanggalEditedBy: ROLE_LABEL[role] } : l,
-      ),
-    );
-    // Log paling akhir (urutan asli) adalah transisi yang membentuk tahapSaatIni saat ini,
-    // jadi tanggalMasukTahap harus ikut disinkronkan agar umur/overdue tetap akurat.
-    if (idx === usulanLogs.length - 1) {
-      setUsulanList((prev) =>
-        prev.map((u) => (u.kode === log.usulanKode ? { ...u, tanggalMasukTahap: newTanggal } : u)),
-      );
+    try {
+      const savedLog = await db.updateLog(logId, {
+        tanggal: newTanggal,
+        tanggalEditedAt: toIsoDate(today),
+        tanggalEditedBy: ROLE_LABEL[role],
+      });
+      setLogs((prev) => prev.map((l) => (l.id === logId ? savedLog : l)));
+      // Log paling akhir (urutan asli) adalah transisi yang membentuk tahapSaatIni saat ini,
+      // jadi tanggalMasukTahap harus ikut disinkronkan agar umur/overdue tetap akurat.
+      if (idx === usulanLogs.length - 1) {
+        replaceUsulan(await db.updateUsulan(log.usulanKode, { tanggalMasukTahap: newTanggal }));
+      }
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
     }
-    return { ok: true };
   };
 
-  const handleDeleteUsulan = (kode) => {
-    const tanggalIso = toIsoDate(today);
-    setUsulanList((prev) =>
-      prev.map((u) => (u.kode === kode ? { ...u, deletedAt: tanggalIso, deletedBy: ROLE_LABEL[role] } : u)),
-    );
+  const handleDeleteUsulan = async (kode) => {
+    try {
+      replaceUsulan(await db.updateUsulan(kode, { deletedAt: toIsoDate(today), deletedBy: ROLE_LABEL[role] }));
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
   };
 
-  const handleRestoreUsulan = (kode) => {
-    setUsulanList((prev) => prev.map((u) => (u.kode === kode ? { ...u, deletedAt: null, deletedBy: null } : u)));
+  const handleRestoreUsulan = async (kode) => {
+    try {
+      replaceUsulan(await db.updateUsulan(kode, { deletedAt: null, deletedBy: null }));
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
   };
 
   const handleExportJson = () => {
@@ -2841,87 +2574,113 @@ function AppShell() {
 
       <main id="main-content" className="mx-auto max-w-7xl px-4 py-6">
         <div className="print:hidden">
-          <Switch>
-            <Route path="/">
-              <DasborPage
-                usulanList={visibleUsulanList}
-                dokumenList={dokumenList}
-                filters={filters}
-                onFilterChange={setFilters}
-                onSelect={(kode) => navigate(`/usulan/${kode}`)}
-                sort={sort}
-                onSortChange={setSort}
-                today={today}
-                canDelete={canManageTrash}
-                onDelete={(kode) => setDeleteTarget(kode)}
-              />
-            </Route>
-            <Route path="/usulan/:kode">
-              {(params) => {
-                const usulan =
-                  usulanList.find(
-                    (u) => u.kode === params.kode && (role !== "unor" || u.unorKode === unorViewingAs),
-                  ) ?? null;
-                if (!usulan) {
-                  return (
-                    <div className="space-y-4">
-                      <h2 id="page-heading" tabIndex={-1} className="text-lg font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
-                        Usulan tidak ditemukan
-                      </h2>
-                      <p className="text-sm text-slate-600 dark:text-slate-300">
-                        Usulan dengan kode &ldquo;{params.kode}&rdquo; tidak ditemukan atau tidak terlihat oleh peran Anda saat ini.
-                      </p>
-                      <Button variant="link" onClick={() => navigate("/")}>
-                        <span aria-hidden="true">&larr;</span> Kembali ke Dasbor
-                      </Button>
-                    </div>
-                  );
-                }
-                return (
-                  <DetailUsulanPage
-                    usulan={usulan}
-                    dokumenList={dokumenList}
-                    logs={logs}
-                    onBack={() => navigate("/")}
-                    onTransition={(toTahap, keterangan, manual) => handleTransition(usulan, toTahap, keterangan, manual)}
-                    onEditTanggalAwal={(newTanggal) => handleEditTanggalUsulanAwal(usulan.kode, newTanggal)}
-                    onEditLogTanggal={handleEditLogTanggal}
-                    canEdit={canEditDetail}
-                  />
-                );
-              }}
-            </Route>
-            <Route path="/formulir">
-              {canSeeFormulir ? (
-                <FormulirPage
-                  usulanList={usulanList.filter((u) => !u.deletedAt)}
+          {actionError && (
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <FormFeedback feedback={{ type: "error", text: actionError }} />
+              </div>
+              <Button onClick={() => setActionError(null)}>Tutup</Button>
+            </div>
+          )}
+          {loadState.status === "loading" && (
+            <p role="status" className="text-sm text-slate-500 dark:text-slate-400">
+              Memuat data dari server…
+            </p>
+          )}
+          {loadState.status === "error" && (
+            <div className="space-y-3">
+              <FormFeedback feedback={{ type: "error", text: `Gagal memuat data: ${loadState.error}` }} />
+              <Button variant="primary" onClick={loadData}>
+                Coba lagi
+              </Button>
+            </div>
+          )}
+          {loadState.status === "ready" && (
+            <Switch>
+              <Route path="/">
+                <DasborPage
+                  usulanList={visibleUsulanList}
                   dokumenList={dokumenList}
-                  onAddUsulan={handleAddUsulan}
-                  onAddDokumen={handleAddDokumen}
-                  onValidateDokumen={handleValidateDokumen}
-                />
-              ) : (
-                <Redirect to="/" />
-              )}
-            </Route>
-            <Route path="/laporan">
-              <LaporanPage usulanList={visibleUsulanList} logs={logs} today={today} />
-            </Route>
-            <Route path="/recycle-bin">
-              {canManageTrash ? (
-                <RecycleBinPage
-                  usulanList={deletedUsulanList}
-                  onRestore={handleRestoreUsulan}
+                  filters={filters}
+                  onFilterChange={setFilters}
                   onSelect={(kode) => navigate(`/usulan/${kode}`)}
+                  sort={sort}
+                  onSortChange={setSort}
+                  today={today}
+                  canDelete={canManageTrash}
+                  onDelete={(kode) => setDeleteTarget(kode)}
                 />
-              ) : (
+              </Route>
+              <Route path="/usulan/:kode">
+                {(params) => {
+                  const usulan =
+                    usulanList.find(
+                      (u) => u.kode === params.kode && (role !== "unor" || u.unorKode === unorViewingAs),
+                    ) ?? null;
+                  if (!usulan) {
+                    return (
+                      <div className="space-y-4">
+                        <h2 id="page-heading" tabIndex={-1} className="text-lg font-semibold text-slate-900 focus:outline-none dark:text-slate-100">
+                          Usulan tidak ditemukan
+                        </h2>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                          Usulan dengan kode &ldquo;{params.kode}&rdquo; tidak ditemukan atau tidak terlihat oleh peran Anda saat ini.
+                        </p>
+                        <Button variant="link" onClick={() => navigate("/")}>
+                          <span aria-hidden="true">&larr;</span> Kembali ke Dasbor
+                        </Button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <DetailUsulanPage
+                      usulan={usulan}
+                      dokumenList={dokumenList}
+                      logs={logs}
+                      onBack={() => navigate("/")}
+                      onTransition={(toTahap, keterangan, manual) => handleTransition(usulan, toTahap, keterangan, manual)}
+                      onEditTanggalAwal={(newTanggal) => handleEditTanggalUsulanAwal(usulan.kode, newTanggal)}
+                      onEditLogTanggal={handleEditLogTanggal}
+                      canEdit={canEditDetail}
+                    />
+                  );
+                }}
+              </Route>
+              <Route path="/formulir">
+                {canSeeFormulir ? (
+                  <FormulirPage
+                    usulanList={usulanList.filter((u) => !u.deletedAt)}
+                    dokumenList={dokumenList}
+                    onAddUsulan={handleAddUsulan}
+                    onAddDokumen={handleAddDokumen}
+                    onValidateDokumen={handleValidateDokumen}
+                  />
+                ) : (
+                  <Redirect to="/" />
+                )}
+              </Route>
+              <Route path="/laporan">
+                <LaporanPage usulanList={visibleUsulanList} logs={logs} today={today} />
+              </Route>
+              <Route path="/recycle-bin">
+                {canManageTrash ? (
+                  <RecycleBinPage
+                    usulanList={deletedUsulanList}
+                    onRestore={async (kode) => {
+                      const result = await handleRestoreUsulan(kode);
+                      if (!result.ok) setActionError(result.error);
+                    }}
+                    onSelect={(kode) => navigate(`/usulan/${kode}`)}
+                  />
+                ) : (
+                  <Redirect to="/" />
+                )}
+              </Route>
+              <Route>
                 <Redirect to="/" />
-              )}
-            </Route>
-            <Route>
-              <Redirect to="/" />
-            </Route>
-          </Switch>
+              </Route>
+            </Switch>
+          )}
         </div>
         <div className="hidden print:block">
           <CetakRingkasanPage usulanList={visibleUsulanList} dokumenList={dokumenList} today={today} />
@@ -2938,9 +2697,10 @@ function AppShell() {
           <div className="flex gap-2 pt-1">
             <Button
               variant="danger"
-              onClick={() => {
-                handleDeleteUsulan(deleteTarget);
+              onClick={async () => {
+                const result = await handleDeleteUsulan(deleteTarget);
                 setDeleteTarget(null);
+                if (!result.ok) setActionError(result.error);
               }}
             >
               Hapus Usulan
