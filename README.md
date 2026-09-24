@@ -16,9 +16,21 @@ Each proposal moves through eight defined stages (initial review, document valid
 
 - React 18 + Vite
 - Tailwind CSS (via CDN)
-- No backend — all data lives in React state for the session
+- Supabase (Postgres) as the shared backend for proposals, documents, and stage logs
 
 ## Getting started
+
+### 1. Set up Supabase
+
+1. In the Supabase SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql) to create the tables, the proposal-code sequence, and row-level security policies.
+2. Run [`supabase/seed.sql`](./supabase/seed.sql) once to load the 12 sample proposals (optional).
+3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from **Project Settings → API**.
+
+Only `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are injected into the browser bundle (see `vite.config.js`). `SUPABASE_SECRET_KEY` is never read by the app. When deploying (e.g. Vercel), set the same two variables in the project's environment settings.
+
+> Access is currently open: anyone with the site URL can read and edit data (there is no login yet). Deletes are soft deletes, and the database does not allow hard deletes from the app.
+
+### 2. Run the app
 
 ```bash
 npm install
