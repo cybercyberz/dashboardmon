@@ -5,3 +5,8 @@ dist/
 .idea/
 CLAUDE.md
 graphify-out/
+
+.vercel
+.env*
+.server.pid
+server.log
