@@ -47,8 +47,14 @@ create table if not exists public.logs (
   oleh_siapa text not null,
   manual boolean not null default false,
   tanggal_edited_at date,
-  tanggal_edited_by text
+  tanggal_edited_by text,
+  keterangan_edited_at date,
+  keterangan_edited_by text
 );
+
+-- Untuk database yang sudah ada sebelum kolom audit keterangan ditambahkan.
+alter table public.logs add column if not exists keterangan_edited_at date;
+alter table public.logs add column if not exists keterangan_edited_by text;
 
 create index if not exists dokumen_usulan_kode_idx on public.dokumen (usulan_kode);
 create index if not exists logs_usulan_kode_idx on public.logs (usulan_kode);

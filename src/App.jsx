@@ -1076,7 +1076,7 @@ function EditIcon() {
   );
 }
 
-function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogTanggal }) {
+function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogTanggal, onEditLogKeterangan }) {
   const maxPutaran = usulan.putaran;
   const rounds = [];
   for (let r = 1; r <= maxPutaran; r += 1) {
@@ -1089,11 +1089,11 @@ function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogT
   const [editingKey, setEditingKey] = useState(null);
   const [draftValue, setDraftValue] = useState("");
   const [draftError, setDraftError] = useState("");
-  const dateInputRef = useRef(null);
+  const editInputRef = useRef(null);
   const returnFocusRef = useRef(null);
 
   useEffect(() => {
-    if (editingKey) dateInputRef.current?.focus();
+    if (editingKey) editInputRef.current?.focus();
   }, [editingKey]);
 
   const startEdit = (entryKey, currentIso, triggerEl) => {
@@ -1112,7 +1112,7 @@ function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogT
   const saveEdit = async (persist) => {
     const result = await persist(draftValue);
     if (!result || !result.ok) {
-      setDraftError(result?.error ?? "Tanggal tidak valid.");
+      setDraftError(result?.error ?? "Gagal menyimpan.");
       return;
     }
     setEditingKey(null);
@@ -1152,7 +1152,7 @@ function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogT
         </label>
         <input
           id={`tanggal-edit-${entryKey}`}
-          ref={dateInputRef}
+          ref={editInputRef}
           type="date"
           className={`${INPUT_BASE} w-auto py-1 text-xs`}
           value={draftValue}
@@ -1183,6 +1183,79 @@ function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogT
         </Button>
         {draftError && (
           <div id={`tanggal-edit-error-${entryKey}`} role="alert" className="w-full text-xs text-red-600 dark:text-red-400">
+            {draftError}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderKeterangan = ({ entryKey, keterangan, editedAt, editedBy, ariaLabel, onSave }) => {
+    if (editingKey !== entryKey) {
+      return (
+        <>
+          <div className="flex items-start gap-1 text-sm text-slate-600 dark:text-slate-300">
+            <span className="whitespace-pre-line">{keterangan}</span>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                className="!p-0.5 leading-none"
+                aria-label={ariaLabel}
+                onClick={(e) => startEdit(entryKey, keterangan, e.currentTarget)}
+              >
+                <EditIcon />
+              </Button>
+            )}
+          </div>
+          {editedAt && (
+            <div className="text-xs italic text-slate-400 dark:text-slate-500">
+              Keterangan disunting pada {formatTanggal(editedAt)} oleh {editedBy}
+            </div>
+          )}
+        </>
+      );
+    }
+    return (
+      <div className="space-y-1">
+        <label htmlFor={`keterangan-edit-${entryKey}`} className="sr-only">
+          {ariaLabel}
+        </label>
+        <textarea
+          id={`keterangan-edit-${entryKey}`}
+          ref={editInputRef}
+          className={`${INPUT_BASE} text-sm`}
+          rows={2}
+          value={draftValue}
+          onChange={(e) => setDraftValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              saveEdit(onSave);
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              cancelEdit();
+            }
+          }}
+          aria-invalid={draftError ? "true" : undefined}
+          aria-describedby={draftError ? `keterangan-edit-error-${entryKey}` : undefined}
+        />
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            className="!p-1 leading-none text-green-600 dark:text-green-400"
+            aria-label="Simpan keterangan"
+            onClick={() => saveEdit(onSave)}
+          >
+            <span aria-hidden="true">&#10003;</span>
+          </Button>
+          <Button variant="ghost" className="!p-1 leading-none" aria-label="Batalkan pengeditan keterangan" onClick={cancelEdit}>
+            <span aria-hidden="true">&times;</span>
+          </Button>
+          <span className="text-xs text-slate-400 dark:text-slate-500">Ctrl+Enter untuk simpan, Esc untuk batal</span>
+        </div>
+        {draftError && (
+          <div id={`keterangan-edit-error-${entryKey}`} role="alert" className="text-xs text-red-600 dark:text-red-400">
             {draftError}
           </div>
         )}
@@ -1230,7 +1303,14 @@ function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogT
                   </span>
                   {log.manual && <Pill color="amber">Manual</Pill>}
                 </div>
-                <div className="text-sm text-slate-600 dark:text-slate-300">{log.keterangan}</div>
+                {renderKeterangan({
+                  entryKey: `ket-${log.id}`,
+                  keterangan: log.keterangan,
+                  editedAt: log.keteranganEditedAt,
+                  editedBy: log.keteranganEditedBy,
+                  ariaLabel: `Ubah keterangan perpindahan ke ${log.keTahap === "SELESAI" ? "Selesai" : (TAHAP_BY_KODE[log.keTahap]?.label ?? log.keTahap)}`,
+                  onSave: (value) => onEditLogKeterangan(log.id, value),
+                })}
                 <div className="text-xs text-slate-500 dark:text-slate-400">oleh {log.olehSiapa}</div>
               </li>
             ))}
@@ -1691,7 +1771,7 @@ function DasborPage({
   );
 }
 
-function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, onEditTanggalAwal, onEditLogTanggal, canEdit }) {
+function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, onEditTanggalAwal, onEditLogTanggal, onEditLogKeterangan, canEdit }) {
   const usulanLogs = logs.filter((l) => l.usulanKode === usulan.kode);
   const posisi = POSISI_BOLA_BY_KODE[usulan.posisiBola];
   const tahap = TAHAP_BY_KODE[usulan.tahapSaatIni];
@@ -1767,6 +1847,7 @@ function DetailUsulanPage({ usulan, dokumenList, logs, onBack, onTransition, onE
           canEdit={canEdit && !usulan.deletedAt}
           onEditTanggalAwal={onEditTanggalAwal}
           onEditLogTanggal={onEditLogTanggal}
+          onEditLogKeterangan={onEditLogKeterangan}
         />
       </div>
 
@@ -2479,6 +2560,32 @@ function AppShell() {
     }
   };
 
+  const handleEditLogKeterangan = async (logId, newKeterangan) => {
+    const log = logs.find((l) => l.id === logId);
+    if (!log) return { ok: false, error: "Entri tidak ditemukan." };
+    const keterangan = (newKeterangan ?? "").trim();
+    if (!keterangan) return { ok: false, error: "Keterangan wajib diisi." };
+    if (keterangan === log.keterangan) return { ok: true };
+    const usulanLogs = logs.filter((l) => l.usulanKode === log.usulanKode);
+    const isLatest = usulanLogs[usulanLogs.length - 1]?.id === logId;
+
+    try {
+      const savedLog = await db.updateLog(logId, {
+        keterangan,
+        keteranganEditedAt: toIsoDate(today),
+        keteranganEditedBy: ROLE_LABEL[role],
+      });
+      setLogs((prev) => prev.map((l) => (l.id === logId ? savedLog : l)));
+      // Keterangan log paling akhir juga ditampilkan sebagai catatanTerakhir usulan.
+      if (isLatest) {
+        replaceUsulan(await db.updateUsulan(log.usulanKode, { catatanTerakhir: keterangan }));
+      }
+      return { ok: true };
+    } catch (err) {
+      return saveError(err);
+    }
+  };
+
   const handleDeleteUsulan = async (kode) => {
     try {
       replaceUsulan(await db.updateUsulan(kode, { deletedAt: toIsoDate(today), deletedBy: ROLE_LABEL[role] }));
@@ -2641,6 +2748,7 @@ function AppShell() {
                       onTransition={(toTahap, keterangan, manual) => handleTransition(usulan, toTahap, keterangan, manual)}
                       onEditTanggalAwal={(newTanggal) => handleEditTanggalUsulanAwal(usulan.kode, newTanggal)}
                       onEditLogTanggal={handleEditLogTanggal}
+                      onEditLogKeterangan={handleEditLogKeterangan}
                       canEdit={canEditDetail}
                     />
                   );
