@@ -40,3 +40,21 @@ drop policy if exists "open update" on public.catatan_progres;
 create policy "open select" on public.catatan_progres for select to anon, authenticated using (true);
 create policy "open insert" on public.catatan_progres for insert to anon, authenticated with check (true);
 create policy "open update" on public.catatan_progres for update to anon, authenticated using (true) with check (true);
+
+-- Kolom audit sunting keterangan log (dari fitur sunting Lini Masa) dan
+-- publikasi Realtime, untuk database lama yang belum memilikinya.
+alter table public.logs add column if not exists keterangan_edited_at date;
+alter table public.logs add column if not exists keterangan_edited_by text;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['usulan', 'dokumen', 'logs', 'catatan_progres'] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;

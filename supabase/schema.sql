@@ -64,8 +64,14 @@ create table if not exists public.logs (
   oleh_siapa text not null,
   manual boolean not null default false,
   tanggal_edited_at date,
-  tanggal_edited_by text
+  tanggal_edited_by text,
+  keterangan_edited_at date,
+  keterangan_edited_by text
 );
+
+-- Untuk database yang sudah ada sebelum kolom audit keterangan ditambahkan.
+alter table public.logs add column if not exists keterangan_edited_at date;
+alter table public.logs add column if not exists keterangan_edited_by text;
 
 create index if not exists dokumen_usulan_kode_idx on public.dokumen (usulan_kode);
 create index if not exists logs_usulan_kode_idx on public.logs (usulan_kode);
@@ -100,5 +106,20 @@ begin
     execute format('create policy "open select" on public.%I for select to anon, authenticated using (true)', t);
     execute format('create policy "open insert" on public.%I for insert to anon, authenticated with check (true)', t);
     execute format('create policy "open update" on public.%I for update to anon, authenticated using (true) with check (true)', t);
+  end loop;
+end $$;
+
+-- Realtime: perubahan langsung tampil di perangkat lain tanpa muat ulang.
+-- Aman dijalankan ulang (tabel yang sudah terdaftar dilewati).
+do $$
+declare t text;
+begin
+  foreach t in array array['usulan', 'dokumen', 'logs', 'catatan_progres'] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
   end loop;
 end $$;

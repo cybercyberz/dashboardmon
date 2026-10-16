@@ -22,7 +22,7 @@ Each proposal moves through eight defined stages (initial review, document valid
 
 ### 1. Set up Supabase
 
-1. In the Supabase SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql) to create the tables, the proposal-code sequence, and row-level security policies.
+1. In the Supabase SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql) to create the tables, the proposal-code sequence, row-level security policies, and Realtime publication (so edits appear on other open devices without a reload). The script is safe to re-run.
 2. Run [`supabase/seed.sql`](./supabase/seed.sql) once to load the 12 sample proposals (optional).
 3. Copy `.env.example` to `.env.local` and fill in `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` from **Project Settings → API**.
 
