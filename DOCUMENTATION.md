@@ -1,6 +1,6 @@
 # DashboardMon — Project Documentation
 
-Full technical reference for **DashboardMon** (`dashboardmon-biro-kotl`): what it does, how it's built, and how it's deployed — GitHub → Vercel → Supabase, end to end. For a short quick-start, see [README.md](./README.md). For behavioral guidance when working on this repo with Claude Code, see [CLAUDE.md](./CLAUDE.md).
+Full technical reference for **DashboardMon** (`dashboardmon-biro-kotl`): what it does, how it's built, and how it's deployed — GitHub → Vercel → Supabase, end to end. For a short quick-start, see [README.md](./README.md).
 
 ## 1. Overview
 
@@ -180,7 +180,7 @@ Even if `SUPABASE_SECRET_KEY`/`SUPABASE_JWKS_URL` are present in the same `.env.
 ## 8. GitHub / repository
 
 - **Remote:** `https://github.com/cybercyberz/dashboardmon.git`
-- **Branch model:** `master` is the default branch and is **not** branch-protected; most commits are pushed directly to it. At least one feature (`claude/brave-brown-war02l` → the Supabase migration) went through a PR merge instead.
+- **Branch model:** `master` is the default branch and is **not** branch-protected; most commits are pushed directly to it. A few features (e.g. the Supabase migration) went through a PR merge instead.
 - **History narrative** (oldest → newest):
   1. `55fe6c9` — initial commit, client-only prototype (localStorage-based)
   2. `50daf0a` — accessibility & UI hierarchy pass
