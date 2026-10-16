@@ -23,6 +23,11 @@ function fromDokumenRow(row) {
   return { ...d, tanggalValidasi: d.tanggalValidasi ?? "" };
 }
 
+function fromCatatanRow(row) {
+  const { createdAt, ...c } = fromRow(row);
+  return { ...c, tindakLanjut: c.tindakLanjut ?? "" };
+}
+
 function client() {
   if (!supabase) throw new Error(supabaseConfigError);
   return supabase;
@@ -35,15 +40,17 @@ function unwrap({ data, error }) {
 
 export async function fetchAll() {
   const db = client();
-  const [usulan, dokumen, logs] = await Promise.all([
+  const [usulan, dokumen, logs, catatan] = await Promise.all([
     db.from("usulan").select("*").order("created_at").order("kode"),
     db.from("dokumen").select("*").order("id"),
     db.from("logs").select("*").order("id"),
+    db.from("catatan_progres").select("*").order("id"),
   ]);
   return {
     usulanList: unwrap(usulan).map(fromUsulanRow),
     dokumenList: unwrap(dokumen).map(fromDokumenRow),
     logs: unwrap(logs).map(fromRow),
+    catatanList: unwrap(catatan).map(fromCatatanRow),
   };
 }
 
@@ -73,4 +80,8 @@ export async function insertLog(log) {
 
 export async function updateLog(id, patch) {
   return fromRow(unwrap(await client().from("logs").update(toRow(patch)).eq("id", id).select().single()));
+}
+
+export async function insertCatatan(catatan) {
+  return fromCatatanRow(unwrap(await client().from("catatan_progres").insert(toRow(catatan)).select().single()));
 }

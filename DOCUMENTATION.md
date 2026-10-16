@@ -6,7 +6,7 @@ Full technical reference for **DashboardMon** (`dashboardmon-biro-kotl`): what i
 
 DashboardMon tracks *usulan perubahan organisasi* (organizational-change proposals) inside an Indonesian government ministry, as they move through review at the ministry's internal bureau (Biro KOTL), joint review with the Ministry of State Apparatus Reform (PANRB), legal harmonization with the Ministry of Law and Human Rights (KUMHAM), and final enactment.
 
-Each proposal moves through 8 fixed stages, can be sent back for revision any number of times (each cycle is a "round" / *putaran*), and every stage change is logged with a timestamp, actor, and note.
+Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01.CFM.01.SOP.01–04, effective October 2026, scanned PDFs in the repo root), transcribed step-by-step into `src/sop.js`: **otk** (Penataan OTK Kementerian, 22 steps), **upt** (Penataan Organisasi UPT, 25 steps), **lns** (Penataan LNS, 11 steps), **opd** (Fasilitasi Pemetaan OPD, 16 steps), plus **non_sop** for items outside any SOP (e.g. IPKK) which have no step flow. A proposal can be sent back at decision steps any number of times (each cycle is a "round" / *putaran*), every step change is logged, and dated progress notes (*catatan progres* — the modernized replacement of the old Excel monthly sheets) record narrative progress and follow-ups.
 
 **Audience:** Biro KOTL bureau staff (who process proposals) and the proposing units themselves (who can check status).
 
@@ -17,8 +17,12 @@ Each proposal moves through 8 fixed stages, can be sent back for revision any nu
 | Term | Meaning |
 |---|---|
 | **usulan** | A proposal, keyed by a human-readable code like `SETJEN-2026-001` (unit prefix + year + running number from a shared DB sequence). |
-| **tahap** | One of 8 fixed stages, T1–T8, displayed with Roman numerals (I–VIII): T1 Telaah surat usulan, T2 Validasi dokumen, T3 Penyempurnaan di unit organisasi, T4 Penjadwalan & rapat PANRB, T5 Pembahasan rancangan permen, T6 Konsultasi publik, T7 Harmonisasi Kemenkumham, T8 Penetapan & pengundangan. |
-| **posisi bola** | "Ball position" — whose desk the proposal is currently on: `BKO` (Biro KOTL, the bureau itself), `UNOR` (the proposing unit), `PANRB`, or `KUMHAM`. |
+| **sop / langkah** | The SOP workflow a proposal follows (`otk`/`upt`/`lns`/`opd`/`non_sop`) and its current step number (`langkahSaatIni`). Step data (kegiatan, pelaksana, waktu "Mutu Baku", kelengkapan, output, decision branches) lives in `src/sop.js`. `non_sop` items have `langkah_saat_ini = 0` and no step flow. |
+| **fase** | Dashboard-level grouping of SOP steps: pengusulan, validasi_pembahasan, proses_panrb, persetujuan_prinsip, izin_prakarsa, penyusunan_permen, harmonisasi_pengundangan. Each step maps to one fase. |
+| **posisi bola** | "Ball position" — the *pelaksana* (swimlane) of the current step: `UNOR`, `SETJEN`, `BKO`, `MENTERI`, `PANRB`, `BIRO_HUKUM`, `KEMENKUMHAM`, and for SOP.04: `PEMDA`, `PFID`, `UNIT_KERJA`, `KEMENDAGRI`. |
+| **prioritas** | Optional handling priority from the on-going list: `I`, `II`, `III`, or null. |
+| **catatan progres** | Dated progress note per proposal (`progres` + `tindak lanjut` + author), replacing the Excel monthly sheets' PROGRESS/TINDAK LANJUT columns; shown as a timeline on the detail page and aggregated on `/rekap`. |
+| **status** | `aktif`, `selesai` (set only by completing the last SOP step), `ditunda`, `dibatalkan` (the latter two set via the status panel, always recording a catatan progres). |
 | **putaran** | Revision round. Increments every time a proposal is sent back; the proposal-detail timeline groups history by round. |
 | **jenis perubahan** | Type of organizational change: `pembentukan` (formation), `penggabungan` (merger), `penghapusan` (dissolution), `perubahan_nomenklatur` (rename), `perubahan_tugas_fungsi` (change of duties/function). |
 | **unor / unit terdampak** | The proposing Eselon-I unit (`unorKode`) and the list of affected Eselon-II sub-units. |
@@ -33,17 +37,18 @@ Each proposal moves through 8 fixed stages, can be sent back for revision any nu
 
 ### Stage transitions
 
-The legal graph of which stage can move to which is defined once, in `TRANSITION_MAP` inside `src/App.jsx`, and enforced by `validateTransition`. A separate "bypass" panel (`BypassTransitionPanel`, `pelaksana_biro` only) allows a manual stage move outside that graph for edge cases, but the normal UI (`TransitionActions`) only ever offers moves `TRANSITION_MAP` says are legal.
+The legal graph of which step can move to which is derived once from the SOP step data (`src/sop.js`) by `getTransitionOptions` inside `src/App.jsx` — a decision step offers its `cabang` branches (a "return" branch increments *putaran*), any other step offers the next step, the last step offers the `SELESAI` sentinel — and enforced by `validateTransition`/`applyTransition`. A separate "bypass" panel (`BypassTransitionPanel`, `pelaksana_biro` only) allows a manual step move within the same SOP outside that graph for edge cases, but the normal UI (`TransitionActions`) only ever offers legal moves.
 
 ## 3. Architecture
 
 - **Stack:** React 18 + Vite 5, [wouter](https://github.com/molefrog/wouter) for routing, Tailwind CSS (compiled at build time via PostCSS — **not** loaded from a CDN, despite what the short README says), Supabase (`@supabase/supabase-js`) as the backend, `@vercel/analytics` for Web Analytics.
-- **File layout:** almost the entire app is one file, `src/App.jsx` (~2,700 lines):
-  1. Domain constants (units, stage list, transition labels, colors, etc.)
-  2. Pure helper/domain functions (date math, `TRANSITION_MAP`, `validateTransition`, `applyTransition`, report aggregations)
-  3. Presentational components (`Button`, `Modal`, `Timeline`, `ProposalTable`, `TransitionActions`, etc.)
-  4. Page components (`DasborPage`, `DetailUsulanPage`, `FormulirPage`, `LaporanPage`, `RecycleBinPage`, `CetakRingkasanPage`)
+- **File layout:** almost the entire app is one file, `src/App.jsx` (~3,000 lines):
+  1. Domain constants (units, status/prioritas enums, colors, etc.)
+  2. Pure helper/domain functions (date math, `getTransitionOptions`, `validateTransition`, `applyTransition`, report aggregations)
+  3. Presentational components (`Button`, `Modal`, `Timeline`, `ProposalTable`, `TransitionActions`, `SopStepper`, `CatatanProgresPanel`, `UbahStatusPanel`, etc.)
+  4. Page components (`DasborPage`, `DetailUsulanPage`, `FormulirPage`, `RekapBulananPage`, `LaporanPage`, `RecycleBinPage`, `CetakRingkasanPage`)
   5. `export default function App()` — wraps everything in a wouter `<Router hook={useHashLocation}>` (hash-based routing — no server-side route config needed on Vercel) and renders `AppShell`, which owns all state.
+  - `src/sop.js` — pure-data transcription of the four SOP PDFs: `SOP_LIST` (steps per workflow), `PELAKSANA_LIST` (swimlanes), `FASE_LIST`, `DOKUMEN_JENIS_LIST`, `getLangkah()`. No React, no logic beyond lookup.
   - `src/db.js` — Supabase data-access layer (see §4).
   - `src/supabaseClient.js` — Supabase client singleton (see §4).
   - `src/main.jsx` — mounts `<App/>` + `<Analytics/>`.
@@ -55,6 +60,7 @@ The legal graph of which stage can move to which is defined once, in `TRANSITION
   | `/` | `DasborPage` (Dashboard) | none |
   | `/usulan/:kode` | `DetailUsulanPage` | none (but content is further scoped for `unor` role) |
   | `/formulir` | `FormulirPage` (intake forms) | `role === "pelaksana_biro"`, else redirect to `/` |
+  | `/rekap` | `RekapBulananPage` (monthly recap, replaces the Excel monthly sheets; printing on this route prints the recap itself) | none |
   | `/laporan` | `LaporanPage` (Reports) | none |
   | `/recycle-bin` | `RecycleBinPage` | `role === "pelaksana_biro"`, else redirect to `/` |
   | anything else | — | redirect to `/` |
@@ -83,11 +89,12 @@ Reads only from `import.meta.env` (build-time injected — see §6), never `proc
 
 | Function | Table(s) | Notes |
 |---|---|---|
-| `fetchAll()` | `usulan`, `dokumen`, `logs` | Parallel fetch via `Promise.all`. `usulan` ordered by `created_at, kode`; `dokumen`/`logs` ordered by `id`. **The app depends on `logs` insertion order** (see schema comment in §5). |
+| `fetchAll()` | `usulan`, `dokumen`, `logs`, `catatan_progres` | Parallel fetch via `Promise.all`. `usulan` ordered by `created_at, kode`; the rest ordered by `id`. **The app depends on `logs` insertion order** (see schema comment in §5). |
 | `nextUsulanSeq()` | — | Calls Postgres RPC `next_usulan_seq()` — a shared, race-safe counter for generating proposal codes. |
 | `insertUsulan(usulan)` / `updateUsulan(kode, patch)` | `usulan` | Keyed by `kode` (text), not a numeric id. |
 | `insertDokumen(dokumen)` / `updateDokumen(id, patch)` | `dokumen` | |
 | `insertLog(log)` / `updateLog(id, patch)` | `logs` | `updateLog` is only used for retroactive date corrections on the timeline. |
+| `insertCatatan(catatan)` | `catatan_progres` | Progress notes are append-only from the UI (no update/delete). |
 
 One quiet but important rule: `toRow()` converts empty-string dates (`""`, the app's "no date" convention) to `null` before writing, and `fromDokumenRow()` converts `null` back to `""` on read, so `<input type="date">` never receives `null`.
 
@@ -95,13 +102,16 @@ One quiet but important rule: `toRow()` converts empty-string dates (`""`, the a
 
 **Project:** `pcxwlkaytkgtjspoeezm` (from `SUPABASE_URL=https://pcxwlkaytkgtjspoeezm.supabase.co`).
 
-**Schema** (`supabase/schema.sql`) — 3 tables:
+**Schema** (`supabase/schema.sql`) — 4 tables:
 
-- **`usulan`** — `kode text primary key`, `judul`, `unor_kode`, `unit_terdampak text[]`, `jenis_perubahan`, `tahap_saat_ini`, `posisi_bola`, `putaran int default 1`, `tanggal_masuk_tahap date`, `tanggal_usulan_awal date` (+ `..._edited_at`/`..._edited_by` audit columns), `status text default 'aktif'`, `catatan_terakhir text default ''`, `deleted_at date`, `deleted_by text`, `created_at timestamptz default now()`. No FK/enum constraints on `unor_kode`/`tahap_saat_ini`/etc. — validity is entirely client-side.
+- **`usulan`** — `kode text primary key`, `judul`, `unor_kode`, `unit_terdampak text[]`, `jenis_perubahan`, `sop_kode text default 'otk'`, `langkah_saat_ini int default 1` (0 for `non_sop`), `prioritas text` (nullable), `posisi_bola`, `putaran int default 1`, `tanggal_masuk_tahap date` (date the current step was entered; column name kept from the old model), `tanggal_usulan_awal date` (+ `..._edited_at`/`..._edited_by` audit columns), `status text default 'aktif'`, `catatan_terakhir text default ''`, `deleted_at date`, `deleted_by text`, `created_at timestamptz default now()`. No FK/enum constraints on `unor_kode`/`sop_kode`/etc. — validity is entirely client-side.
+- **`catatan_progres`** — `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `tanggal date`, `progres text`, `tindak_lanjut text default ''`, `oleh_siapa text default ''`, `created_at timestamptz default now()`.
 - **`dokumen`** — `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `putaran`, `jenis`, `versi int default 1`, `tanggal_terima date`, `status_validasi text default 'diterima'`, `catatan_validasi text default ''`, `validator_nama text default ''`, `tanggal_validasi date`.
-- **`logs`** — `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `dari_tahap`, `ke_tahap`, `dari_posisi_bola`, `ke_posisi_bola`, `putaran int`, `tanggal date`, `keterangan text`, `oleh_siapa text`, `manual boolean default false`, `tanggal_edited_at date`, `tanggal_edited_by text`. Schema comment: *"Urutan id = urutan asli pencatatan; aplikasi bergantung pada urutan ini"* (id order = original recording order; the app depends on this).
+- **`logs`** — `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `dari_tahap`, `ke_tahap` (SOP step numbers as text, e.g. `"3"` → `"4"`, or the `"SELESAI"` sentinel; column names kept from the old T1–T8 model), `dari_posisi_bola`, `ke_posisi_bola`, `putaran int`, `tanggal date`, `keterangan text`, `oleh_siapa text`, `manual boolean default false`, `tanggal_edited_at date`, `tanggal_edited_by text`. Schema comment: *"Urutan id = urutan asli pencatatan; aplikasi bergantung pada urutan ini"* (id order = original recording order; the app depends on this).
 
-Indexes: `dokumen_usulan_kode_idx`, `logs_usulan_kode_idx` (both on `usulan_kode`).
+Indexes: `dokumen_usulan_kode_idx`, `logs_usulan_kode_idx`, `catatan_progres_usulan_kode_idx` (all on `usulan_kode`).
+
+**Migration from the old T1–T8 model:** `supabase/migrasi-sop.sql` — **truncates `usulan`/`dokumen`/`logs`**, drops `tahap_saat_ini`, adds `sop_kode`/`langkah_saat_ini`/`prioritas`, creates `catatan_progres` (+ RLS). Run it once in the SQL Editor on an existing database, then run `seed.sql` (20 on-going proposals transcribed from the monitoring Excel, with their September progress notes and May document-checklist states). Fresh projects just run `schema.sql` + `seed.sql`.
 
 **Shared sequence / RPC:**
 ```sql
