@@ -1,16 +1,16 @@
-# DashboardMon — Project Documentation
+# DashboardMon - Project Documentation
 
-Full technical reference for **DashboardMon** (`dashboardmon-biro-kotl`): what it does, how it's built, and how it's deployed — GitHub → Vercel → Supabase, end to end. For a short quick-start, see [README.md](./README.md).
+Full technical reference for **DashboardMon** (`dashboardmon-biro-kotl`): what it does, how it's built, and how it's deployed - GitHub → Vercel → Supabase, end to end. For a short quick-start, see [README.md](./README.md).
 
 ## 1. Overview
 
 DashboardMon tracks *usulan perubahan organisasi* (organizational-change proposals) inside an Indonesian government ministry, as they move through review at the ministry's internal bureau (Biro KOTL), joint review with the Ministry of State Apparatus Reform (PANRB), legal harmonization with the Ministry of Law and Human Rights (KUMHAM), and final enactment.
 
-Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01.CFM.01.SOP.01–04, effective October 2026, scanned PDFs in the repo root), transcribed step-by-step into `src/sop.js`: **otk** (Penataan OTK Kementerian, 22 steps), **upt** (Penataan Organisasi UPT, 25 steps), **lns** (Penataan LNS, 11 steps), **opd** (Fasilitasi Pemetaan OPD, 16 steps), plus **non_sop** for items outside any SOP (e.g. IPKK) which have no step flow. A proposal can be sent back at decision steps any number of times (each cycle is a "round" / *putaran*), every step change is logged, and dated progress notes (*catatan progres* — the modernized replacement of the old Excel monthly sheets) record narrative progress and follow-ups.
+Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01.CFM.01.SOP.01-04, effective October 2026, scanned PDFs in the repo root), transcribed step-by-step into `src/sop.js`: **otk** (Penataan OTK Kementerian, 22 steps), **upt** (Penataan Organisasi UPT, 25 steps), **lns** (Penataan LNS, 11 steps), **opd** (Fasilitasi Pemetaan OPD, 16 steps), plus **non_sop** for items outside any SOP (e.g. IPKK) which have no step flow. A proposal can be sent back at decision steps any number of times (each cycle is a "round" / *putaran*), every step change is logged, and dated progress notes (*catatan progres* - the modernized replacement of the old Excel monthly sheets) record narrative progress and follow-ups.
 
 **Audience:** Biro KOTL bureau staff (who process proposals) and the proposing units themselves (who can check status).
 
-**Current state:** open access — there is no login. Anyone with the URL can read and write data. See [§10 Known limitations](#10-known-limitations--gotchas).
+**Current state:** open access - there is no login. Anyone with the URL can read and write data. See [§10 Known limitations](#10-known-limitations--gotchas).
 
 ## 2. Domain model / glossary
 
@@ -19,7 +19,7 @@ Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01
 | **usulan** | A proposal, keyed by a human-readable code like `SETJEN-2026-001` (unit prefix + year + running number from a shared DB sequence). |
 | **sop / langkah** | The SOP workflow a proposal follows (`otk`/`upt`/`lns`/`opd`/`non_sop`) and its current step number (`langkahSaatIni`). Step data (kegiatan, pelaksana, waktu "Mutu Baku", kelengkapan, output, decision branches) lives in `src/sop.js`. `non_sop` items have `langkah_saat_ini = 0` and no step flow. |
 | **fase** | Dashboard-level grouping of SOP steps: pengusulan, validasi_pembahasan, proses_panrb, persetujuan_prinsip, izin_prakarsa, penyusunan_permen, harmonisasi_pengundangan. Each step maps to one fase. |
-| **posisi bola** | "Ball position" — the *pelaksana* (swimlane) of the current step: `UNOR`, `SETJEN`, `BKO`, `MENTERI`, `PANRB`, `BIRO_HUKUM`, `KEMENKUMHAM`, and for SOP.04: `PEMDA`, `PFID`, `UNIT_KERJA`, `KEMENDAGRI`. |
+| **posisi bola** | "Ball position" - the *pelaksana* (swimlane) of the current step: `UNOR`, `SETJEN`, `BKO`, `MENTERI`, `PANRB`, `BIRO_HUKUM`, `KEMENKUMHAM`, and for SOP.04: `PEMDA`, `PFID`, `UNIT_KERJA`, `KEMENDAGRI`. |
 | **prioritas** | Optional handling priority from the on-going list: `I`, `II`, `III`, or null. |
 | **catatan progres** | Dated progress note per proposal (`progres` + `tindak lanjut` + author), replacing the Excel monthly sheets' PROGRESS/TINDAK LANJUT columns; shown as a timeline on the detail page and aggregated on `/rekap`. |
 | **status** | `aktif`, `selesai` (set only by completing the last SOP step), `ditunda`, `dibatalkan` (the latter two set via the status panel, always recording a catatan progres). |
@@ -27,7 +27,7 @@ Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01
 | **jenis perubahan** | Type of organizational change: `pembentukan` (formation), `penggabungan` (merger), `penghapusan` (dissolution), `perubahan_nomenklatur` (rename), `perubahan_tugas_fungsi` (change of duties/function). |
 | **unor / unit terdampak** | The proposing Eselon-I unit (`unorKode`) and the list of affected Eselon-II sub-units. |
 
-### Roles (client-side only — see §10)
+### Roles (client-side only - see §10)
 
 | Role code | Label | Can do |
 |---|---|---|
@@ -37,22 +37,23 @@ Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01
 
 ### Stage transitions
 
-The legal graph of which step can move to which is derived once from the SOP step data (`src/sop.js`) by `getTransitionOptions` inside `src/App.jsx` — a decision step offers its `cabang` branches (a "return" branch increments *putaran*), any other step offers the next step, the last step offers the `SELESAI` sentinel — and enforced by `validateTransition`/`applyTransition`. A separate "bypass" panel (`BypassTransitionPanel`, `pelaksana_biro` only) allows a manual step move within the same SOP outside that graph for edge cases, but the normal UI (`TransitionActions`) only ever offers legal moves.
+The legal graph of which step can move to which is derived once from the SOP step data (`src/sop.js`) by `getTransitionOptions` inside `src/App.jsx` - a decision step offers its `cabang` branches (a "return" branch increments *putaran*), any other step offers the next step, the last step offers the `SELESAI` sentinel - and enforced by `validateTransition`/`applyTransition`. A separate "bypass" panel (`BypassTransitionPanel`, `pelaksana_biro` only) allows a manual step move within the same SOP outside that graph for edge cases, but the normal UI (`TransitionActions`) only ever offers legal moves.
 
 ## 3. Architecture
 
-- **Stack:** React 18 + Vite 5, [wouter](https://github.com/molefrog/wouter) for routing, Tailwind CSS (compiled at build time via PostCSS — **not** loaded from a CDN, despite what the short README says), Supabase (`@supabase/supabase-js`) as the backend, `@vercel/analytics` for Web Analytics.
+- **Stack:** React 18 + Vite 5, [wouter](https://github.com/molefrog/wouter) for routing, Tailwind CSS (compiled at build time via PostCSS - **not** loaded from a CDN, despite what the short README says), Supabase (`@supabase/supabase-js`) as the backend, `@vercel/analytics` for Web Analytics.
 - **File layout:** almost the entire app is one file, `src/App.jsx` (~3,000 lines):
   1. Domain constants (units, status/prioritas enums, colors, etc.)
   2. Pure helper/domain functions (date math, `getTransitionOptions`, `validateTransition`, `applyTransition`, report aggregations)
   3. Presentational components (`Button`, `Modal`, `Timeline`, `ProposalTable`, `TransitionActions`, `SopStepper`, `CatatanProgresPanel`, `UbahStatusPanel`, etc.)
   4. Page components (`DasborPage`, `DetailUsulanPage`, `FormulirPage`, `RekapBulananPage`, `LaporanPage`, `RecycleBinPage`, `CetakRingkasanPage`)
-  5. `export default function App()` — wraps everything in a wouter `<Router hook={useHashLocation}>` (hash-based routing — no server-side route config needed on Vercel) and renders `AppShell`, which owns all state.
-  - `src/sop.js` — pure-data transcription of the four SOP PDFs: `SOP_LIST` (steps per workflow), `PELAKSANA_LIST` (swimlanes), `FASE_LIST`, `DOKUMEN_JENIS_LIST`, `getLangkah()`. No React, no logic beyond lookup.
-  - `src/db.js` — Supabase data-access layer (see §4).
-  - `src/supabaseClient.js` — Supabase client singleton (see §4).
-  - `src/main.jsx` — mounts `<App/>` + `<Analytics/>`.
-  - `src/index.css` — just the three `@tailwind` directives.
+  5. `export default function App()` - wraps everything in a wouter `<Router hook={useHashLocation}>` (hash-based routing - no server-side route config needed on Vercel) and renders `AppShell`, which owns all state.
+  - `src/sop.js` - pure-data transcription of the four SOP PDFs: `SOP_LIST` (steps per workflow), `PELAKSANA_LIST` (swimlanes), `FASE_LIST`, `DOKUMEN_JENIS_LIST`, `getLangkah()`. No React, no logic beyond lookup.
+  - `src/upt.js` - pure-data transcription of the Lampiran of Permen PU 17/2026 (which replaced the Lampiran of Permen PU 1/2025): `UPT_KLASIFIKASI` (19 classifications grouped under the 6 eselon-I units that have UPT, 208 balai in total with lokasi and wilayah kerja), plus the `UNOR_BER_UPT`, `UPT_KLASIFIKASI_BY_UNOR`, `UPT_KLASIFIKASI_BY_KODE`, and `UPT_BALAI_BY_NAMA` lookups built from it. Drives the cascading UPT picker (`UptTerdampakPicker`) that replaces `EselonIIMultiSelect` in the intake form when `sopKode === "upt"`, and the balai detail line on the proposal detail page. Balai names are stored in the existing `unit_terdampak` column, so there is no extra schema. No React, no logic beyond lookup.
+  - `src/db.js` - Supabase data-access layer (see §4).
+  - `src/supabaseClient.js` - Supabase client singleton (see §4).
+  - `src/main.jsx` - mounts `<App/>` + `<Analytics/>`.
+  - `src/index.css` - just the three `@tailwind` directives.
 - **Routing (hash-based):**
 
   | Path | Page | Gate |
@@ -63,11 +64,11 @@ The legal graph of which step can move to which is derived once from the SOP ste
   | `/rekap` | `RekapBulananPage` (monthly recap, replaces the Excel monthly sheets; printing on this route prints the recap itself) | none |
   | `/laporan` | `LaporanPage` (Reports) | none |
   | `/recycle-bin` | `RecycleBinPage` | `role === "pelaksana_biro"`, else redirect to `/` |
-  | anything else | — | redirect to `/` |
+  | anything else | - | redirect to `/` |
 
-  `CetakRingkasanPage` (print summary) is not a route — it's always mounted, hidden, and only shown via a `print:` Tailwind variant when the user clicks "Cetak Ringkasan" (calls `window.print()`).
+  `CetakRingkasanPage` (print summary) is not a route - it's always mounted, hidden, and only shown via a `print:` Tailwind variant when the user clicks "Cetak Ringkasan" (calls `window.print()`).
 
-- **State management:** plain `useState`/`useEffect`/`useMemo` in `AppShell`, no Redux/Context/React Query. `AppShell` owns `usulanList`, `dokumenList`, `logs`, `loadState`, `role`, `unorViewingAs`, `darkMode`, filters/sort, etc., and passes handler functions down as props (prop drilling, no context providers). Every write handler follows the same pattern: validate with a pure domain function → call `db.js` → merge the server's returned row into local state → return `{ok, error}` for the UI to display. There is no optimistic UI update and no client-side cache — every read/write is a real round trip to Supabase.
+- **State management:** plain `useState`/`useEffect`/`useMemo` in `AppShell`, no Redux/Context/React Query. `AppShell` owns `usulanList`, `dokumenList`, `logs`, `loadState`, `role`, `unorViewingAs`, `darkMode`, filters/sort, etc., and passes handler functions down as props (prop drilling, no context providers). Every write handler follows the same pattern: validate with a pure domain function → call `db.js` → merge the server's returned row into local state → return `{ok, error}` for the UI to display. There is no optimistic UI update and no client-side cache - every read/write is a real round trip to Supabase.
 
 ## 4. Data layer
 
@@ -83,14 +84,14 @@ export const supabaseConfigError =
 
 export const supabase = supabaseConfigError ? null : createClient(url, key);
 ```
-Reads only from `import.meta.env` (build-time injected — see §6), never `process.env` at runtime. If either var is missing, `supabase` is `null` and every `db.js` call throws the Indonesian error message above, which the UI surfaces via its error state.
+Reads only from `import.meta.env` (build-time injected - see §6), never `process.env` at runtime. If either var is missing, `supabase` is `null` and every `db.js` call throws the Indonesian error message above, which the UI surfaces via its error state.
 
-**`src/db.js`** — thin CRUD layer, camelCase (app) ↔ snake_case (Postgres) translation, **no business logic**:
+**`src/db.js`** - thin CRUD layer, camelCase (app) ↔ snake_case (Postgres) translation, **no business logic**:
 
 | Function | Table(s) | Notes |
 |---|---|---|
 | `fetchAll()` | `usulan`, `dokumen`, `logs`, `catatan_progres` | Parallel fetch via `Promise.all`. `usulan` ordered by `created_at, kode`; the rest ordered by `id`. **The app depends on `logs` insertion order** (see schema comment in §5). |
-| `nextUsulanSeq()` | — | Calls Postgres RPC `next_usulan_seq()` — a shared, race-safe counter for generating proposal codes. |
+| `nextUsulanSeq()` | - | Calls Postgres RPC `next_usulan_seq()` - a shared, race-safe counter for generating proposal codes. |
 | `insertUsulan(usulan)` / `updateUsulan(kode, patch)` | `usulan` | Keyed by `kode` (text), not a numeric id. |
 | `insertDokumen(dokumen)` / `updateDokumen(id, patch)` | `dokumen` | |
 | `insertLog(log)` / `updateLog(id, patch)` | `logs` | `updateLog` is only used for retroactive date corrections on the timeline. |
@@ -102,16 +103,16 @@ One quiet but important rule: `toRow()` converts empty-string dates (`""`, the a
 
 **Project:** `pcxwlkaytkgtjspoeezm` (from `SUPABASE_URL=https://pcxwlkaytkgtjspoeezm.supabase.co`).
 
-**Schema** (`supabase/schema.sql`) — 4 tables:
+**Schema** (`supabase/schema.sql`) - 4 tables:
 
-- **`usulan`** — `kode text primary key`, `judul`, `unor_kode`, `unit_terdampak text[]`, `jenis_perubahan`, `sop_kode text default 'otk'`, `langkah_saat_ini int default 1` (0 for `non_sop`), `prioritas text` (nullable), `posisi_bola`, `putaran int default 1`, `tanggal_masuk_tahap date` (date the current step was entered; column name kept from the old model), `tanggal_usulan_awal date` (+ `..._edited_at`/`..._edited_by` audit columns), `status text default 'aktif'`, `catatan_terakhir text default ''`, `deleted_at date`, `deleted_by text`, `created_at timestamptz default now()`. No FK/enum constraints on `unor_kode`/`sop_kode`/etc. — validity is entirely client-side.
-- **`catatan_progres`** — `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `tanggal date`, `progres text`, `tindak_lanjut text default ''`, `oleh_siapa text default ''`, `created_at timestamptz default now()`.
-- **`dokumen`** — `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `putaran`, `jenis`, `versi int default 1`, `tanggal_terima date`, `status_validasi text default 'diterima'`, `catatan_validasi text default ''`, `validator_nama text default ''`, `tanggal_validasi date`.
-- **`logs`** — `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `dari_tahap`, `ke_tahap` (SOP step numbers as text, e.g. `"3"` → `"4"`, or the `"SELESAI"` sentinel; column names kept from the old T1–T8 model), `dari_posisi_bola`, `ke_posisi_bola`, `putaran int`, `tanggal date`, `keterangan text`, `oleh_siapa text`, `manual boolean default false`, `tanggal_edited_at date`, `tanggal_edited_by text`, `keterangan_edited_at date`, `keterangan_edited_by text`. On the Detail page's Lini Masa, Pelaksana Biro can edit both the date and the note (`keterangan`) of each entry; editing the note of the latest entry also syncs `usulan.catatan_terakhir`. For databases created before the `keterangan_edited_*` columns existed, `schema.sql` contains idempotent `alter table ... add column if not exists` statements. Schema comment: *"Urutan id = urutan asli pencatatan; aplikasi bergantung pada urutan ini"* (id order = original recording order; the app depends on this).
+- **`usulan`** - `kode text primary key`, `judul`, `unor_kode`, `unit_terdampak text[]`, `jenis_perubahan`, `sop_kode text default 'otk'`, `langkah_saat_ini int default 1` (0 for `non_sop`), `prioritas text` (nullable), `posisi_bola`, `putaran int default 1`, `tanggal_masuk_tahap date` (date the current step was entered; column name kept from the old model), `tanggal_usulan_awal date` (+ `..._edited_at`/`..._edited_by` audit columns), `status text default 'aktif'`, `catatan_terakhir text default ''`, `deleted_at date`, `deleted_by text`, `created_at timestamptz default now()`. No FK/enum constraints on `unor_kode`/`sop_kode`/etc. - validity is entirely client-side.
+- **`catatan_progres`** - `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `tanggal date`, `progres text`, `tindak_lanjut text default ''`, `oleh_siapa text default ''`, `created_at timestamptz default now()`.
+- **`dokumen`** - `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `putaran`, `jenis`, `versi int default 1`, `tanggal_terima date`, `status_validasi text default 'diterima'`, `catatan_validasi text default ''`, `validator_nama text default ''`, `tanggal_validasi date`.
+- **`logs`** - `id bigint identity primary key`, `usulan_kode text references usulan(kode)`, `dari_tahap`, `ke_tahap` (SOP step numbers as text, e.g. `"3"` → `"4"`, or the `"SELESAI"` sentinel; column names kept from the old T1-T8 model), `dari_posisi_bola`, `ke_posisi_bola`, `putaran int`, `tanggal date`, `keterangan text`, `oleh_siapa text`, `manual boolean default false`, `tanggal_edited_at date`, `tanggal_edited_by text`, `keterangan_edited_at date`, `keterangan_edited_by text`. On the Detail page's Lini Masa, Pelaksana Biro can edit both the date and the note (`keterangan`) of each entry; editing the note of the latest entry also syncs `usulan.catatan_terakhir`. For databases created before the `keterangan_edited_*` columns existed, `schema.sql` contains idempotent `alter table ... add column if not exists` statements. Schema comment: *"Urutan id = urutan asli pencatatan; aplikasi bergantung pada urutan ini"* (id order = original recording order; the app depends on this).
 
 Indexes: `dokumen_usulan_kode_idx`, `logs_usulan_kode_idx`, `catatan_progres_usulan_kode_idx` (all on `usulan_kode`).
 
-**Migration from the old T1–T8 model:** `supabase/migrasi-sop.sql` — **truncates `usulan`/`dokumen`/`logs`**, drops `tahap_saat_ini`, adds `sop_kode`/`langkah_saat_ini`/`prioritas`, creates `catatan_progres` (+ RLS). Run it once in the SQL Editor on an existing database, then run `seed.sql` (20 on-going proposals transcribed from the monitoring Excel, with their September progress notes and May document-checklist states). Fresh projects just run `schema.sql` + `seed.sql`.
+**Migration from the old T1-T8 model:** `supabase/migrasi-sop.sql` - **truncates `usulan`/`dokumen`/`logs`**, drops `tahap_saat_ini`, adds `sop_kode`/`langkah_saat_ini`/`prioritas`, creates `catatan_progres` (+ RLS). Run it once in the SQL Editor on an existing database, then run `seed.sql` (20 on-going proposals transcribed from the monitoring Excel, with their September progress notes and May document-checklist states). Fresh projects just run `schema.sql` + `seed.sql`.
 
 **Shared sequence / RPC:**
 ```sql
@@ -125,13 +126,13 @@ grant execute on function public.next_usulan_seq() to anon, authenticated;
 ```
 Used by `App.jsx` to build the running number in a new `kode` (race-safe across concurrent clients).
 
-**Row-level security** — enabled on all three tables, identical policy set per table:
+**Row-level security** - enabled on all three tables, identical policy set per table:
 ```sql
 create policy "open select" on public.<t> for select to anon, authenticated using (true);
 create policy "open insert" on public.<t> for insert to anon, authenticated with check (true);
 create policy "open update" on public.<t> for update to anon, authenticated using (true) with check (true);
 ```
-**There is no delete policy on any table** — hard deletes are impossible through the app's `anon`/`authenticated` roles by design. Deletion is soft-delete only, via `usulan.deleted_at`/`deleted_by`.
+**There is no delete policy on any table** - hard deletes are impossible through the app's `anon`/`authenticated` roles by design. Deletion is soft-delete only, via `usulan.deleted_at`/`deleted_by`.
 
 **Provisioning / re-provisioning:** run `supabase/schema.sql` then `supabase/seed.sql` (optional sample data, 12 proposals) once, either in the Supabase Dashboard's SQL Editor, or programmatically via the Management API:
 ```
@@ -141,7 +142,7 @@ Content-Type: application/json
 
 {"query": "<contents of schema.sql or seed.sql>"}
 ```
-This is how it was applied in practice — the PostgREST anon/service keys in `.env.local` cannot run arbitrary DDL; only a Postgres direct connection or a Management API token can.
+This is how it was applied in practice - the PostgREST anon/service keys in `.env.local` cannot run arbitrary DDL; only a Postgres direct connection or a Management API token can.
 
 ## 6. Environment variables
 
@@ -149,10 +150,10 @@ This is how it was applied in practice — the PostgREST anon/service keys in `.
 |---|---|---|---|
 | `SUPABASE_URL` | yes | **Yes** | Injected into `import.meta.env.SUPABASE_URL` at build time |
 | `SUPABASE_PUBLISHABLE_KEY` | yes | **Yes** | Injected into `import.meta.env.SUPABASE_PUBLISHABLE_KEY` at build time |
-| `SUPABASE_SECRET_KEY` | yes | **No — never** | Not referenced anywhere in `vite.config.js` or app code |
-| `SUPABASE_JWKS_URL` | yes | **No — never** | Unused; likely a placeholder for auth that was never built (see §10) |
+| `SUPABASE_SECRET_KEY` | yes | **No - never** | Not referenced anywhere in `vite.config.js` or app code |
+| `SUPABASE_JWKS_URL` | yes | **No - never** | Unused; likely a placeholder for auth that was never built (see §10) |
 
-`vite.config.js` is the enforcement point — it deliberately allowlists only two names:
+`vite.config.js` is the enforcement point - it deliberately allowlists only two names:
 ```js
 const env = loadEnv(mode, process.cwd(), "SUPABASE_");
 define: {
@@ -170,26 +171,26 @@ Even if `SUPABASE_SECRET_KEY`/`SUPABASE_JWKS_URL` are present in the same `.env.
   ```json
   {"projectId":"prj_Vo0PIXDzsIC0eGheMqlZGfCDoc6U","orgId":"team_ipwryvduLDUKl0U5r4t6FeP8","projectName":"dashboardmon"}
   ```
-  (`.vercel/` is git-ignored — local link only; re-create with `vercel link --yes --project dashboardmon`.)
-- **No `vercel.json`** — deployment relies entirely on Vercel's zero-config Vite auto-detection (`npm run build` → `dist/`).
+  (`.vercel/` is git-ignored - local link only; re-create with `vercel link --yes --project dashboardmon`.)
+- **No `vercel.json`** - deployment relies entirely on Vercel's zero-config Vite auto-detection (`npm run build` → `dist/`).
 - **Production alias:** `https://dashboardmon.vercel.app`
 - **Redeploy:** `vercel --prod` (from the repo root, with the CLI authenticated and linked).
 - **Env vars:** `vercel env ls` / `vercel env add <NAME> <production|preview>` / `vercel env rm`.
-- **Analytics:** `@vercel/analytics`'s `<Analytics/>` is mounted in `src/main.jsx` — Vercel Web Analytics, no extra config needed.
+- **Analytics:** `@vercel/analytics`'s `<Analytics/>` is mounted in `src/main.jsx` - Vercel Web Analytics, no extra config needed.
 
 ## 8. GitHub / repository
 
 - **Remote:** `https://github.com/cybercyberz/dashboardmon.git`
 - **Branch model:** `master` is the default branch and is **not** branch-protected; most commits are pushed directly to it. A few features (e.g. the Supabase migration) went through a PR merge instead.
 - **History narrative** (oldest → newest):
-  1. `55fe6c9` — initial commit, client-only prototype (localStorage-based)
-  2. `50daf0a` — accessibility & UI hierarchy pass
-  3. `e81f046` — UI/UX overhaul: dark mode, wouter routing, shared components, a11y, responsive
-  4. `3c78263` — delete/restore proposals, manual stage-transition bypass, Roman-numeral stage display
-  5. `7462a0b` — inline timeline date editing for `pelaksana_biro`
-  6. `138d989` — Vercel Web Analytics
-  7. `14eea8c` / `3714609` — **Use Supabase as the shared backend** (replaced localStorage; introduced `db.js`, `supabaseClient.js`, `supabase/schema.sql`+`seed.sql`), merged via PR #1
-  8. `41b3c9e` — dev convenience scripts (`start.sh`/`stop.sh`), local WebStorm MCP config (`.mcp.json`)
+  1. `55fe6c9` - initial commit, client-only prototype (localStorage-based)
+  2. `50daf0a` - accessibility & UI hierarchy pass
+  3. `e81f046` - UI/UX overhaul: dark mode, wouter routing, shared components, a11y, responsive
+  4. `3c78263` - delete/restore proposals, manual stage-transition bypass, Roman-numeral stage display
+  5. `7462a0b` - inline timeline date editing for `pelaksana_biro`
+  6. `138d989` - Vercel Web Analytics
+  7. `14eea8c` / `3714609` - **Use Supabase as the shared backend** (replaced localStorage; introduced `db.js`, `supabaseClient.js`, `supabase/schema.sql`+`seed.sql`), merged via PR #1
+  8. `41b3c9e` - dev convenience scripts (`start.sh`/`stop.sh`), local WebStorm MCP config (`.mcp.json`)
 
 ## 9. Local development
 
@@ -210,9 +211,9 @@ Both `.server.pid` and `server.log` are git-ignored runtime artifacts.
 
 ## 10. Known limitations / gotchas
 
-- **No real authentication.** The three-role dropdown (`RoleSwitcher`) is a purely client-side `useState` — it changes what the UI shows, nothing more. Supabase RLS grants `select`/`insert`/`update` to the `anon` role unconditionally (`using (true)`), so **any direct API call can read or write any row regardless of what the browser's role selector says.** Do not describe role checks in this app as a security boundary — they are a UX convenience only. `SUPABASE_SECRET_KEY`/`SUPABASE_JWKS_URL` sit unused in `.env.example`, suggesting real auth was planned but never implemented.
-- **Hardcoded year.** The proposal-code template in `App.jsx`'s add-proposal handler embeds the literal `"2026"` — it is not derived from the current date or from the sequence. This will need a manual code change at year rollover.
+- **No real authentication.** The three-role dropdown (`RoleSwitcher`) is a purely client-side `useState` - it changes what the UI shows, nothing more. Supabase RLS grants `select`/`insert`/`update` to the `anon` role unconditionally (`using (true)`), so **any direct API call can read or write any row regardless of what the browser's role selector says.** Do not describe role checks in this app as a security boundary - they are a UX convenience only. `SUPABASE_SECRET_KEY`/`SUPABASE_JWKS_URL` sit unused in `.env.example`, suggesting real auth was planned but never implemented.
+- **Hardcoded year.** The proposal-code template in `App.jsx`'s add-proposal handler embeds the literal `"2026"` - it is not derived from the current date or from the sequence. This will need a manual code change at year rollover.
 - **No tests, no CI, no linter.** There is no `.github/workflows`, no ESLint/Prettier config, and no `test`/`lint` npm script. `vite build` succeeding on Vercel is the only automated gate before a change goes live.
-- **Single-file frontend.** Essentially all UI and domain logic lives in `src/App.jsx` (~2,700 lines) — there is no per-component file split.
+- **Single-file frontend.** Essentially all UI and domain logic lives in `src/App.jsx` (~2,700 lines) - there is no per-component file split.
 - **No delete policy in Supabase.** Hard deletes are blocked at the database level for `anon`/`authenticated`; the app only ever soft-deletes via `deleted_at`/`deleted_by`.
-- **`logs` table has no explicit ordering column** beyond its identity `id` — the app relies on insertion order to reconstruct history, per the schema's own comment.
+- **`logs` table has no explicit ordering column** beyond its identity `id` - the app relies on insertion order to reconstruct history, per the schema's own comment.

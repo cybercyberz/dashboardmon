@@ -1,5 +1,5 @@
 // =====================================================================
-// DATA SOP PENATAAN KELEMBAGAAN — sumber: PDF SOP Biro KOTL
+// DATA SOP PENATAAN KELEMBAGAAN - sumber: PDF SOP Biro KOTL
 // BKO-03.01.CFM.01.SOP.01 s.d. SOP.04 (efektif Oktober 2026).
 // File ini data murni (tanpa React, tanpa logic): daftar pelaksana (lane),
 // fase agregasi dashboard, dan langkah tiap SOP. Legalitas transisi tetap
@@ -55,7 +55,7 @@ export const DOKUMEN_JENIS_LIST = [
 ];
 
 // ---------------------------------------------------------------------
-// SOP.01 — Proses Penataan OTK Kementerian PU (22 langkah)
+// SOP.01 - Proses Penataan OTK Kementerian PU (22 langkah)
 // ---------------------------------------------------------------------
 const LANGKAH_OTK = [
   {
@@ -292,7 +292,7 @@ const LANGKAH_OTK = [
 ];
 
 // ---------------------------------------------------------------------
-// SOP.02 — Proses Penataan Organisasi UPT (25 langkah)
+// SOP.02 - Proses Penataan Organisasi UPT (25 langkah)
 // ---------------------------------------------------------------------
 const LANGKAH_UPT = [
   {
@@ -561,7 +561,7 @@ const LANGKAH_UPT = [
 ];
 
 // ---------------------------------------------------------------------
-// SOP.03 — Penataan Lembaga Non Struktural / LNS (11 langkah)
+// SOP.03 - Penataan Lembaga Non Struktural / LNS (11 langkah)
 // ---------------------------------------------------------------------
 const LANGKAH_LNS = [
   {
@@ -688,7 +688,7 @@ const LANGKAH_LNS = [
 ];
 
 // ---------------------------------------------------------------------
-// SOP.04 — Fasilitasi Pemetaan Urusan Pemerintahan Bidang PUPR atas
+// SOP.04 - Fasilitasi Pemetaan Urusan Pemerintahan Bidang PUPR atas
 // Penataan OPD (16 langkah)
 // ---------------------------------------------------------------------
 const LANGKAH_OPD = [

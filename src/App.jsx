@@ -12,6 +12,7 @@ import {
   FASE_BY_KODE,
   DOKUMEN_JENIS_LIST,
 } from "./sop.js";
+import { UNOR_BER_UPT, UPT_BALAI_BY_NAMA, UPT_KLASIFIKASI_BY_UNOR } from "./upt.js";
 
 // =====================================================================
 // KONSTANTA UNIT ORGANISASI (Permen PU 1/2024)
@@ -154,7 +155,7 @@ const UNOR_BY_KODE = Object.fromEntries(UNIT_ORGANISASI.map((u) => [u.kode, u]))
 // =====================================================================
 
 // Struktur langkah per SOP (pelaksana, batas waktu "Mutu Baku", kelengkapan,
-// cabang keputusan) ada di src/sop.js — data murni hasil transkrip PDF SOP.
+// cabang keputusan) ada di src/sop.js - data murni hasil transkrip PDF SOP.
 // Konstanta di bawah ini hanya enum tampilan yang tidak diatur SOP.
 
 const PRIORITAS_LIST = [
@@ -209,7 +210,7 @@ const ROLES = [
 ];
 const ROLE_LABEL = Object.fromEntries(ROLES.map((r) => [r.kode, r.label]));
 
-// Single source of truth for status color treatment — pill badge + bar-chart fill —
+// Single source of truth for status color treatment - pill badge + bar-chart fill -
 // keyed by the same color name used throughout PELAKSANA_LIST/STATUS_VALIDASI_LIST.
 // dark: variants are baked in now so step 4 (dark mode) needs no changes here.
 const STATUS_TONE = {
@@ -268,7 +269,7 @@ const STATUS_TONE = {
 };
 
 // Shared visible-focus treatment for every interactive element (buttons, links,
-// keyboard-activatable rows/headers) — the app had zero focus indicators before this.
+// keyboard-activatable rows/headers) - the app had zero focus indicators before this.
 const FOCUS_RING =
   "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 dark:ring-offset-slate-900";
 
@@ -278,7 +279,7 @@ const CARD_BASE = "rounded-lg border bg-white shadow-sm dark:bg-slate-800";
 const CARD_SURFACE = `${CARD_BASE} border-slate-200 dark:border-slate-700`;
 
 // =====================================================================
-// FUNGSI BANTU MURNI (tanpa React) — tanggal, durasi, dan aturan transisi
+// FUNGSI BANTU MURNI (tanpa React) - tanggal, durasi, dan aturan transisi
 // =====================================================================
 
 function toIsoDate(date) {
@@ -344,7 +345,7 @@ function getProposalRowFields(u, dokumenList, today) {
   return { sop, langkah, fase, posisi, overdue, umur, masuk, total };
 }
 
-// Aturan transisi langkah — satu-satunya sumber kebenaran untuk tombol aksi yang boleh
+// Aturan transisi langkah - satu-satunya sumber kebenaran untuk tombol aksi yang boleh
 // ditampilkan maupun untuk validasi saat aksi dieksekusi, dibaca dari data langkah SOP
 // (src/sop.js): langkah keputusan memakai daftar `cabang`-nya, langkah biasa lanjut ke
 // langkah berikutnya, dan langkah terakhir memakai sentinel "SELESAI" (bukan nomor langkah).
@@ -439,15 +440,15 @@ function applyTransition(usulan, { keLangkah, keterangan, olehSiapa, manual = fa
   return { ok: true, usulanPatch, logEntry };
 }
 
-// Label langkah untuk lini masa/log: "Langkah 3 — Melakukan validasi…" atau "Selesai".
+// Label langkah untuk lini masa/log: "Langkah 3: Melakukan validasi…" atau "Selesai".
 function formatLangkahRef(sopKode, ref) {
   if (ref === "SELESAI") return "Selesai";
   const langkah = getLangkah(sopKode, Number(ref));
-  return langkah ? `Langkah ${langkah.no} — ${langkah.kegiatan}` : `Langkah ${ref}`;
+  return langkah ? `Langkah ${langkah.no}: ${langkah.kegiatan}` : `Langkah ${ref}`;
 }
 
 // =====================================================================
-// FUNGSI AGREGASI — dipakai Dasbor dan Laporan, selalu dihitung dari data
+// FUNGSI AGREGASI - dipakai Dasbor dan Laporan, selalu dihitung dari data
 // =====================================================================
 
 function computeSummary(usulanList, today = new Date()) {
@@ -805,7 +806,7 @@ function FilterBar({ filters, onChange }) {
           <option value="">Semua SOP</option>
           {SOP_LIST.map((s) => (
             <option key={s.kode} value={s.kode}>
-              {s.labelPendek} — {s.label}
+              {s.labelPendek}: {s.label}
             </option>
           ))}
         </select>
@@ -968,7 +969,7 @@ function ProposalRowCard({ u, dokumenList, onSelect, today, canDelete, onDelete 
         <div className="min-w-0">
           <div className="font-medium text-slate-900 dark:text-slate-100">{u.kode}</div>
           <div className="truncate text-xs text-slate-500 dark:text-slate-400" title={UNOR_BY_KODE[u.unorKode]?.nama}>
-            {u.unorKode} — {u.judul}
+            {u.unorKode}: {u.judul}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1067,7 +1068,7 @@ function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, 
                       className="max-w-[220px] truncate text-xs text-slate-500 dark:text-slate-400"
                       title={UNOR_BY_KODE[u.unorKode]?.nama}
                     >
-                      {u.unorKode} — {u.judul}
+                      {u.unorKode}: {u.judul}
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300">
@@ -1082,7 +1083,7 @@ function ProposalTable({ usulanList, dokumenList, onSelect, sort, onSortChange, 
                     {langkah ? (
                       <>
                         <div className="max-w-[240px] truncate" title={langkah.kegiatan}>
-                          {langkah.no}/{sop.langkah.length} — {langkah.kegiatan}
+                          {langkah.no}/{sop.langkah.length}: {langkah.kegiatan}
                         </div>
                         {fase && <div className="text-xs text-slate-500 dark:text-slate-400">{fase.label}</div>}
                       </>
@@ -1355,7 +1356,7 @@ function Timeline({ usulan, logs, canEdit = false, onEditTanggalAwal, onEditLogT
       {rounds.map((round) => (
         <Card key={round.putaran} className="p-4">
           <h4 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
-            {round.putaran === 1 ? "Putaran ke-1 — Pengajuan Awal" : `Putaran ke-${round.putaran} — Pengajuan Ulang`}
+            {round.putaran === 1 ? "Putaran ke-1: Pengajuan Awal" : `Putaran ke-${round.putaran}: Pengajuan Ulang`}
           </h4>
           <ol className="space-y-3 border-l-2 border-slate-200 pl-4 dark:border-slate-700">
             {round.putaran === 1 && (
@@ -1577,12 +1578,12 @@ function TransitionActions({ usulan, onTransition }) {
           </div>
         </div>
       )}
-      <Modal open={confirmDialogOpen} onClose={closeAll} title="Selesaikan Proses — Tindakan Tidak Dapat Dibatalkan">
+      <Modal open={confirmDialogOpen} onClose={closeAll} title="Selesaikan Proses: Tindakan Tidak Dapat Dibatalkan">
         <div className="space-y-2">
           {keteranganField}
           <div className="flex gap-2 pt-1">
             <Button variant="success" onClick={() => handleConfirm("SELESAI")}>
-              Konfirmasi — Tindakan Tidak Dapat Dibatalkan
+              Konfirmasi: Tindakan Tidak Dapat Dibatalkan
             </Button>
             <Button onClick={closeAll}>Batal</Button>
           </div>
@@ -1681,7 +1682,7 @@ function BypassTransitionPanel({ usulan, onTransition }) {
           )}
         </div>
       )}
-      <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Pindahkan Langkah Manual — Lewati Alur Normal">
+      <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Pindahkan Langkah Manual: Lewati Alur Normal">
         <div className="space-y-2">
           <p className="text-sm text-slate-600 dark:text-slate-300">
             Usulan akan dipindahkan langsung dari {formatLangkahRef(usulan.sopKode, usulan.langkahSaatIni)} ke{" "}
@@ -1727,6 +1728,106 @@ function EselonIIMultiSelect({ eselonIKode, selected, onChange }) {
           {name}
         </label>
       ))}
+    </div>
+  );
+}
+
+// Pemilih UPT terdampak untuk alur SOP UPT: klasifikasi (tipe/kelas) dahulu,
+// lalu nama balai menurut Lampiran Permen PU 17/2026. Balai terpilih tetap
+// tampil sebagai chip supaya pilihan lintas klasifikasi tidak terlihat hilang
+// saat klasifikasi diganti.
+function UptTerdampakPicker({ unorKode, selected, onChange }) {
+  const [klasifikasiKode, setKlasifikasiKode] = useState("");
+  const [cari, setCari] = useState("");
+
+  const klasifikasiList = UPT_KLASIFIKASI_BY_UNOR[unorKode] ?? [];
+  const klasifikasi = klasifikasiList.find((k) => k.kode === klasifikasiKode) ?? null;
+  const kataCari = cari.trim().toLowerCase();
+  const balaiTampil = (klasifikasi?.balai ?? []).filter(
+    (b) => !kataCari || [b.nama, b.lokasi, ...b.wilayahKerja].some((t) => t.toLowerCase().includes(kataCari)),
+  );
+
+  const toggle = (nama) => {
+    if (selected.includes(nama)) onChange(selected.filter((s) => s !== nama));
+    else onChange([...selected, nama]);
+  };
+
+  if (!unorKode) {
+    return <div className="text-sm text-slate-500 dark:text-slate-400">Pilih unit organisasi eselon I terlebih dahulu.</div>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map((nama) => (
+            <span
+              key={nama}
+              className={`inline-flex max-w-full items-start gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_TONE.blue.pill}`}
+            >
+              <span className="min-w-0">{nama}</span>
+              <button
+                type="button"
+                aria-label={`Hapus ${nama}`}
+                className={`shrink-0 leading-none hover:text-blue-950 dark:hover:text-blue-100 ${FOCUS_RING}`}
+                onClick={() => toggle(nama)}
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <Select
+        aria-label="Klasifikasi UPT"
+        value={klasifikasiKode}
+        onChange={(e) => {
+          setKlasifikasiKode(e.target.value);
+          setCari("");
+        }}
+      >
+        <option value="">Pilih klasifikasi UPT</option>
+        {klasifikasiList.map((k) => (
+          <option key={k.kode} value={k.kode}>
+            {k.nama} ({k.balai.length} balai)
+          </option>
+        ))}
+      </Select>
+      {!klasifikasi ? (
+        <div className="text-sm text-slate-500 dark:text-slate-400">Pilih klasifikasi UPT terlebih dahulu.</div>
+      ) : (
+        <>
+          <Input
+            type="search"
+            aria-label="Cari nama balai, lokasi, atau wilayah kerja"
+            placeholder="Cari nama balai, lokasi, atau wilayah kerja"
+            value={cari}
+            onChange={(e) => setCari(e.target.value)}
+          />
+          <div className="max-h-64 space-y-1.5 overflow-y-auto rounded border border-slate-300 p-2 dark:border-slate-600">
+            {balaiTampil.length === 0 ? (
+              <div className="px-1 py-2 text-sm text-slate-500 dark:text-slate-400">Tidak ada balai yang cocok.</div>
+            ) : (
+              balaiTampil.map((b) => (
+                <label key={b.nama} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={selected.includes(b.nama)}
+                    onChange={() => toggle(b.nama)}
+                  />
+                  <span className="min-w-0">
+                    <span className="font-medium">{b.nama}</span>
+                    <span className="block text-xs text-slate-500 dark:text-slate-400">
+                      {b.lokasi} &middot; {b.wilayahKerja.join(", ")}
+                    </span>
+                  </span>
+                </label>
+              ))
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -1959,7 +2060,7 @@ function CatatanProgresPanel({ usulan, catatanList, canEdit, onAddCatatan, today
 }
 
 // Panel ubah status di luar alur langkah (Excel punya usulan ditunda/dibatalkan).
-// "selesai" tidak diatur di sini — hanya lewat transisi langkah terakhir.
+// "selesai" tidak diatur di sini - hanya lewat transisi langkah terakhir.
 function UbahStatusPanel({ usulan, onUbahStatus }) {
   const [target, setTarget] = useState(null);
   const [keterangan, setKeterangan] = useState("");
@@ -2182,14 +2283,26 @@ function DetailUsulanPage({
       )}
 
       <Card className="p-4">
-        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Jenis Perubahan &amp; Unit Eselon II Terdampak</h3>
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">
+          Jenis Perubahan &amp; {usulan.sopKode === "upt" ? "UPT Terdampak" : "Unit Eselon II Terdampak"}
+        </h3>
         <div className="mb-2">
           <Pill color="gray">{JENIS_PERUBAHAN_LABEL[usulan.jenisPerubahan]}</Pill>
         </div>
-        <ul className="list-inside list-disc text-sm text-slate-700 dark:text-slate-300">
-          {usulan.unitTerdampak.map((unit) => (
-            <li key={unit}>{unit}</li>
-          ))}
+        <ul className="ml-5 list-disc space-y-1 text-sm text-slate-700 dark:text-slate-300">
+          {usulan.unitTerdampak.map((unit) => {
+            const balai = UPT_BALAI_BY_NAMA[unit];
+            return (
+              <li key={unit}>
+                {unit}
+                {balai && (
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">
+                    {balai.klasifikasiNama} &middot; {balai.lokasi} &middot; {balai.wilayahKerja.join(", ")}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </Card>
 
@@ -2240,12 +2353,29 @@ function TambahUsulanForm({ onAddUsulan }) {
   const [feedback, setFeedback] = useState(null);
 
   const sop = SOP_BY_KODE[sopKode];
+  const isUpt = sopKode === "upt";
+  const unorOptions = isUpt ? UNIT_ORGANISASI.filter((u) => UNOR_BER_UPT.includes(u.kode)) : UNIT_ORGANISASI;
+
+  // Daftar unit terdampak alur UPT (nama balai) tidak sepadan dengan daftar alur
+  // lain (nama unit eselon II), jadi berpindah antara keduanya mengosongkan
+  // pilihan - termasuk unit organisasi yang ternyata tidak memiliki UPT.
+  const gantiSop = (kode) => {
+    const jadiUpt = kode === "upt";
+    if (jadiUpt !== isUpt) setUnitTerdampak([]);
+    if (jadiUpt && !UNOR_BER_UPT.includes(unorKode)) setUnorKode("");
+    setSopKode(kode);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
     if (!judul.trim() || !unorKode || unitTerdampak.length === 0) {
-      setFeedback({ type: "error", text: "Judul, unit organisasi, dan minimal satu unit terdampak wajib diisi." });
+      setFeedback({
+        type: "error",
+        text: isUpt
+          ? "Judul, unit organisasi, dan minimal satu UPT terdampak wajib diisi."
+          : "Judul, unit organisasi, dan minimal satu unit terdampak wajib diisi.",
+      });
       return;
     }
     const result = await onAddUsulan({
@@ -2275,10 +2405,10 @@ function TambahUsulanForm({ onAddUsulan }) {
         <Input id="tambah-judul" type="text" value={judul} onChange={(e) => setJudul(e.target.value)} />
       </FormField>
       <FormField id="tambah-sop" label="Alur SOP">
-        <Select id="tambah-sop" value={sopKode} onChange={(e) => setSopKode(e.target.value)}>
+        <Select id="tambah-sop" value={sopKode} onChange={(e) => gantiSop(e.target.value)}>
           {SOP_LIST.map((s) => (
             <option key={s.kode} value={s.kode}>
-              {s.labelPendek} — {s.label}
+              {s.labelPendek}: {s.label}
             </option>
           ))}
         </Select>
@@ -2310,17 +2440,28 @@ function TambahUsulanForm({ onAddUsulan }) {
           }}
         >
           <option value="">Pilih unit organisasi</option>
-          {UNIT_ORGANISASI.map((u) => (
+          {unorOptions.map((u) => (
             <option key={u.kode} value={u.kode}>
-              {u.kode} — {u.nama}
+              {u.kode}: {u.nama}
             </option>
           ))}
         </Select>
+        {isUpt && (
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Hanya unit organisasi yang memiliki UPT yang ditampilkan: {unorOptions.map((u) => u.kode).join(", ")}.
+          </div>
+        )}
       </FormField>
       <fieldset className="min-w-0 border-0 p-0 m-0">
-        <legend className="block text-xs font-medium text-slate-500 dark:text-slate-400">Unit Eselon II Terdampak</legend>
+        <legend className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+          {isUpt ? "UPT Terdampak" : "Unit Eselon II Terdampak"}
+        </legend>
         <div className="mt-1">
-          <EselonIIMultiSelect eselonIKode={unorKode} selected={unitTerdampak} onChange={setUnitTerdampak} />
+          {isUpt ? (
+            <UptTerdampakPicker unorKode={unorKode} selected={unitTerdampak} onChange={setUnitTerdampak} />
+          ) : (
+            <EselonIIMultiSelect eselonIKode={unorKode} selected={unitTerdampak} onChange={setUnitTerdampak} />
+          )}
         </div>
       </fieldset>
       <FormField id="tambah-jenis" label="Jenis Perubahan">
@@ -2372,7 +2513,7 @@ function CatatDokumenForm({ usulanList, onAddDokumen }) {
           <option value="">Pilih usulan</option>
           {aktifList.map((u) => (
             <option key={u.kode} value={u.kode}>
-              {u.kode} — {u.judul}
+              {u.kode}: {u.judul}
             </option>
           ))}
         </Select>
@@ -2448,7 +2589,7 @@ function CatatValidasiForm({ usulanList, dokumenList, onValidateDokumen }) {
           <option value="">Pilih usulan</option>
           {aktifList.map((u) => (
             <option key={u.kode} value={u.kode}>
-              {u.kode} — {u.judul}
+              {u.kode}: {u.judul}
             </option>
           ))}
         </Select>
@@ -2458,7 +2599,7 @@ function CatatValidasiForm({ usulanList, dokumenList, onValidateDokumen }) {
           <option value="">Pilih dokumen</option>
           {dokumenPilihan.map((d) => (
             <option key={d.id} value={d.id}>
-              {DOKUMEN_JENIS_LABEL[d.jenis]} (v{d.versi}) — status saat ini: {STATUS_VALIDASI_BY_KODE[d.statusValidasi].label}
+              {DOKUMEN_JENIS_LABEL[d.jenis]} (v{d.versi}) - status saat ini: {STATUS_VALIDASI_BY_KODE[d.statusValidasi].label}
             </option>
           ))}
         </Select>
@@ -2550,7 +2691,7 @@ function LaporanPage({ usulanList, logs, today }) {
               {avgPutaran.map((row) => (
                 <tr key={row.unorKode}>
                   <td className={tdStrongClass} title={row.unorNama}>
-                    {row.unorKode} — {row.unorNama}
+                    {row.unorKode}: {row.unorNama}
                   </td>
                   <td className={tdClass}>{row.jumlahUsulan}</td>
                   <td className={tdStrongClass}>{row.avgPutaran.toFixed(1)}</td>
@@ -2677,7 +2818,7 @@ function RekapBulananPage({ usulanList, catatanList, today }) {
             Rekap Bulanan
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Catatan progres terbaru tiap usulan hingga akhir bulan terpilih — pengganti sheet bulanan Excel.
+            Catatan progres terbaru tiap usulan hingga akhir bulan terpilih - pengganti sheet bulanan Excel.
           </p>
         </div>
         <div className="flex items-end gap-2">
@@ -2688,7 +2829,7 @@ function RekapBulananPage({ usulanList, catatanList, today }) {
         </div>
       </div>
       <div className="hidden print:block">
-        <h2 className="text-xl font-semibold text-slate-900">Rekap Progres Kelembagaan — {namaBulan}</h2>
+        <h2 className="text-xl font-semibold text-slate-900">Rekap Progres Kelembagaan: {namaBulan}</h2>
       </div>
       <Card className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
@@ -2761,7 +2902,7 @@ function RekapBulananPage({ usulanList, catatanList, today }) {
   );
 }
 
-// Dedicated print-ready summary — always renders the same portfolio snapshot
+// Dedicated print-ready summary - always renders the same portfolio snapshot
 // regardless of which tab was open when "Cetak Ringkasan" was pressed.
 function CetakRingkasanPage({ usulanList, dokumenList, today }) {
   const summary = useMemo(() => computeSummary(usulanList, today), [usulanList, today]);
@@ -2945,7 +3086,7 @@ function AppShell() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // "Cetak Ringkasan" triggers window.print() directly rather than navigating to a
-  // route — CetakRingkasanPage stays mounted (hidden) at every route, shown only
+  // route - CetakRingkasanPage stays mounted (hidden) at every route, shown only
   // via the `print:` media query, so printing never disturbs browser history.
   const [printRequested, setPrintRequested] = useState(false);
   useEffect(() => {
@@ -3246,7 +3387,7 @@ function AppShell() {
               Dasbor Pemantauan Usulan Perubahan Organisasi
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Biro Kepegawaian, Organisasi, dan Tata Laksana — Sekretariat Jenderal Kementerian Pekerjaan Umum
+              Biro Kepegawaian, Organisasi, dan Tata Laksana - Sekretariat Jenderal Kementerian Pekerjaan Umum
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
