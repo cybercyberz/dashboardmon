@@ -49,6 +49,7 @@ The legal graph of which step can move to which is derived once from the SOP ste
   4. Page components (`DasborPage`, `DetailUsulanPage`, `FormulirPage`, `RekapBulananPage`, `LaporanPage`, `RecycleBinPage`, `CetakRingkasanPage`)
   5. `export default function App()` - wraps everything in a wouter `<Router hook={useHashLocation}>` (hash-based routing - no server-side route config needed on Vercel) and renders `AppShell`, which owns all state.
   - `src/sop.js` - pure-data transcription of the four SOP PDFs: `SOP_LIST` (steps per workflow), `PELAKSANA_LIST` (swimlanes), `FASE_LIST`, `DOKUMEN_JENIS_LIST`, `getLangkah()`. No React, no logic beyond lookup.
+  - `src/upt.js` - pure-data transcription of the Lampiran of Permen PU 17/2026 (which replaced the Lampiran of Permen PU 1/2025): `UPT_KLASIFIKASI` (19 classifications grouped under the 6 eselon-I units that have UPT, 208 balai in total with lokasi and wilayah kerja), plus the `UNOR_BER_UPT`, `UPT_KLASIFIKASI_BY_UNOR`, `UPT_KLASIFIKASI_BY_KODE`, and `UPT_BALAI_BY_NAMA` lookups built from it. Drives the cascading UPT picker (`UptTerdampakPicker`) that replaces `EselonIIMultiSelect` in the intake form when `sopKode === "upt"`, and the balai detail line on the proposal detail page. Balai names are stored in the existing `unit_terdampak` column, so there is no extra schema. No React, no logic beyond lookup.
   - `src/db.js` - Supabase data-access layer (see §4).
   - `src/supabaseClient.js` - Supabase client singleton (see §4).
   - `src/main.jsx` - mounts `<App/>` + `<Analytics/>`.

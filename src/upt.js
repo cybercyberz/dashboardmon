@@ -1,0 +1,388 @@
+// =====================================================================
+// DATA UNIT PELAKSANA TEKNIS (UPT) KEMENTERIAN PEKERJAAN UMUM
+//
+// Transkrip Lampiran Peraturan Menteri Pekerjaan Umum Nomor 17 Tahun 2026,
+// yang mengganti seluruh Lampiran Permen PU Nomor 1 Tahun 2025 tentang
+// Organisasi dan Tata Kerja Unit Pelaksana Teknis di Kementerian PU.
+// Nomenklatur klasifikasi (Tipe A/B, Kelas I/II) mengikuti pasal tipologi
+// Permen PU 1/2025 dan Pasal 219 sebagaimana diubah Permen PU 17/2026.
+//
+// Jumlah balai per klasifikasi dikunci Pasal 219: total 208 balai.
+// File ini data murni: tanpa React, tanpa logika. Mengubah nama, lokasi,
+// wilayah kerja, atau susunan klasifikasi di sini berarti menyimpang dari
+// peraturan yang ditandatangani: hanya lakukan atas dasar peraturan revisi,
+// dan sebutkan peraturannya di pesan commit.
+//
+// Dua penyimpangan sengaja dari teks Lampiran, keduanya salah cetak:
+// "Balai Besar Besar Wilayah Sungai Citanduy" ditulis "Balai Besar Wilayah
+// Sungai Citanduy", dan wilayah kerja "Provinsi Sulawesi tengah" ditulis
+// "Provinsi Sulawesi Tengah".
+// =====================================================================
+
+export const UPT_KLASIFIKASI = [
+  {
+    kode: "sda_bbws_a",
+    unorKode: "SDA",
+    nama: "Balai Besar Wilayah Sungai Tipe A",
+    balai: [
+      { nama: "Balai Besar Wilayah Sungai Sumatera VIII Palembang", lokasi: "Palembang", wilayahKerja: ["WS Musi-Sugihan-Banyuasin-Lemau"] },
+      { nama: "Balai Besar Wilayah Sungai Mesuji Sekampung", lokasi: "Bandar Lampung", wilayahKerja: ["WS Mesuji-Tulang Bawang", "WS Seputih-Sekampung"] },
+      { nama: "Balai Besar Wilayah Sungai Cidanau, Ciujung, Cidurian", lokasi: "Serang", wilayahKerja: ["WS Cidanau-Ciujung-Cidurian"] },
+      { nama: "Balai Besar Wilayah Sungai Ciliwung Cisadane", lokasi: "Jakarta", wilayahKerja: ["WS Ciliwung-Cisadane"] },
+      { nama: "Balai Besar Wilayah Sungai Citarum", lokasi: "Bandung", wilayahKerja: ["WS Citarum"] },
+      { nama: "Balai Besar Wilayah Sungai Cimanuk Cisanggarung", lokasi: "Cirebon", wilayahKerja: ["WS Cimanuk-Cisanggarung"] },
+      { nama: "Balai Besar Wilayah Sungai Pemali Juana", lokasi: "Semarang", wilayahKerja: ["WS Jratunseluna"] },
+      { nama: "Balai Besar Wilayah Sungai Serayu Opak", lokasi: "Yogyakarta", wilayahKerja: ["WS Serayu-Bogowonto", "WS Progo-Opak-Serang"] },
+      { nama: "Balai Besar Wilayah Sungai Bengawan Solo", lokasi: "Surakarta", wilayahKerja: ["WS Bengawan Solo"] },
+      { nama: "Balai Besar Wilayah Sungai Brantas", lokasi: "Surabaya", wilayahKerja: ["WS Brantas"] },
+      { nama: "Balai Besar Wilayah Sungai Pompengan Jeneberang", lokasi: "Makassar", wilayahKerja: ["WS Pompengan-Larona", "WS Saddang", "WS Walanae-Cenranae", "WS Jeneberang"] },
+    ],
+  },
+  {
+    kode: "sda_bbws_b",
+    unorKode: "SDA",
+    nama: "Balai Besar Wilayah Sungai Tipe B",
+    balai: [
+      { nama: "Balai Besar Wilayah Sungai Sumatera II Medan", lokasi: "Medan", wilayahKerja: ["WS Belawan-Ular-Padang", "WS Toba-Asahan", "WS Batang Natal-Batang Batahan"] },
+      { nama: "Balai Besar Wilayah Sungai Citanduy", lokasi: "Banjar", wilayahKerja: ["WS Citanduy"] },
+      { nama: "Balai Besar Wilayah Sungai Nusa Tenggara I Mataram", lokasi: "Mataram", wilayahKerja: ["WS Lombok", "WS Sumbawa"] },
+      { nama: "Balai Besar Wilayah Sungai Nusa Tenggara II Kupang", lokasi: "Kupang", wilayahKerja: ["WS Flores", "WS Benanain", "WS Noelmina"] },
+    ],
+  },
+  {
+    kode: "sda_bws",
+    unorKode: "SDA",
+    nama: "Balai Wilayah Sungai",
+    balai: [
+      { nama: "Balai Wilayah Sungai Sumatera I Banda Aceh", lokasi: "Banda Aceh", wilayahKerja: ["WS Aceh-Meureudu", "WS Woyla-Batee", "WS Jambo-Aye", "WS Alas-Singkil"] },
+      { nama: "Balai Wilayah Sungai Sumatera III Pekanbaru", lokasi: "Pekanbaru", wilayahKerja: ["WS Rokan (Provinsi Riau)", "WS Siak", "WS Kampar (Provinsi Riau)", "WS Indragiri-Akuaman (Provinsi Riau)"] },
+      { nama: "Balai Wilayah Sungai Sumatera IV Batam", lokasi: "Batam", wilayahKerja: ["WS Kepulauan Riau"] },
+      { nama: "Balai Wilayah Sungai Bangka Belitung", lokasi: "Pangkal Pinang", wilayahKerja: ["WS Bangka"] },
+      { nama: "Balai Wilayah Sungai Sumatera V Padang", lokasi: "Padang", wilayahKerja: ["WS Indragiri-Akuaman (Provinsi Sumbar)", "WS Rokan (Provinsi Sumbar)", "WS Kampar (Provinsi Sumbar)", "WS Batanghari (Provinsi Sumbar)"] },
+      { nama: "Balai Wilayah Sungai Sumatera VI Jambi", lokasi: "Jambi", wilayahKerja: ["WS Batanghari (Provinsi Jambi)"] },
+      { nama: "Balai Wilayah Sungai Sumatera VII Bengkulu", lokasi: "Bengkulu", wilayahKerja: ["WS Teramang-Muar", "WS Nasal-Padang-Guci"] },
+      { nama: "Balai Wilayah Sungai Bali Penida", lokasi: "Denpasar", wilayahKerja: ["WS Bali-Penida"] },
+      { nama: "Balai Wilayah Sungai Kalimantan I Pontianak", lokasi: "Pontianak", wilayahKerja: ["WS Kapuas"] },
+      { nama: "Balai Wilayah Sungai Kalimantan II Palangkaraya", lokasi: "Palangkaraya", wilayahKerja: ["WS Jelai-Kendawangan", "WS Mentaya-Katingan", "WS Barito DAS Kapuas Murung"] },
+      { nama: "Balai Wilayah Sungai Kalimantan III Banjarmasin", lokasi: "Banjarmasin", wilayahKerja: ["WS Barito selain DAS Kapuas Murung"] },
+      { nama: "Balai Wilayah Sungai Kalimantan IV Samarinda", lokasi: "Samarinda", wilayahKerja: ["WS Mahakam"] },
+      { nama: "Balai Wilayah Sungai Kalimantan V Tanjung Selor", lokasi: "Tanjung Selor", wilayahKerja: ["WS Sesayap", "WS Berau-Kelai"] },
+      { nama: "Balai Wilayah Sungai Sulawesi I Manado", lokasi: "Manado", wilayahKerja: ["WS Tondano-Sangihe-Talaud-Miangas", "WS Dumoga-Sangkub"] },
+      { nama: "Balai Wilayah Sungai Sulawesi II Gorontalo", lokasi: "Gorontalo", wilayahKerja: ["WS Limboto-Bolango-Bone", "WS Paguyaman", "WS Randangan"] },
+      { nama: "Balai Wilayah Sungai Sulawesi III Palu", lokasi: "Palu", wilayahKerja: ["WS Palu-Lariang", "WS Parigi-Poso"] },
+      { nama: "Balai Wilayah Sungai Sulawesi IV Kendari", lokasi: "Kendari", wilayahKerja: ["WS Lasolo-Konaweha", "WS Towari-Lasusua"] },
+      { nama: "Balai Wilayah Sungai Sulawesi V Mamuju", lokasi: "Mamuju", wilayahKerja: ["WS Kaluku-Karama"] },
+      { nama: "Balai Wilayah Sungai Maluku", lokasi: "Ambon", wilayahKerja: ["WS Ambon-Seram", "WS Kep.Yamdena-Wetar"] },
+      { nama: "Balai Wilayah Sungai Maluku Utara", lokasi: "Ternate", wilayahKerja: ["WS Halmahera Utara", "WS Halmahera Selatan"] },
+      { nama: "Balai Wilayah Sungai Papua", lokasi: "Jayapura", wilayahKerja: ["WS Memberamo-Tami-Apauvar", "WS Wapoga-Mimika"] },
+      { nama: "Balai Wilayah Sungai Papua Barat", lokasi: "Manokwari", wilayahKerja: ["WS Kamundan-Sebyar", "WS Omba"] },
+      { nama: "Balai Wilayah Sungai Papua Merauke", lokasi: "Merauke", wilayahKerja: ["WS Einlanden-Digul-Bikuma"] },
+    ],
+  },
+  {
+    kode: "sda_balai_teknik",
+    unorKode: "SDA",
+    nama: "Balai Teknik",
+    balai: [
+      { nama: "Balai Teknik Bendungan", lokasi: "Jakarta", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Pantai", lokasi: "Buleleng", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Sungai", lokasi: "Surakarta", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Rawa", lokasi: "Banjarmasin", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Irigasi", lokasi: "Bekasi", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Sabo", lokasi: "Yogyakarta", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Hidrolika dan Geoteknik Keairan", lokasi: "Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Air Tanah", lokasi: "Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Hidrologi dan Lingkungan Keairan", lokasi: "Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+    ],
+  },
+  {
+    kode: "bm_bbpjn_a",
+    unorKode: "BM",
+    nama: "Balai Besar Pelaksanaan Jalan Nasional Tipe A",
+    balai: [
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Sumatera Utara", lokasi: "Medan", wilayahKerja: ["Provinsi Sumatera Utara"] },
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Sumatera Selatan", lokasi: "Palembang", wilayahKerja: ["Provinsi Sumatera Selatan"] },
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional DKI Jakarta-Jawa Barat", lokasi: "Bandung", wilayahKerja: ["Provinsi DKI Jakarta", "Provinsi Jawa Barat"] },
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Jawa Tengah-DI Yogyakarta", lokasi: "Semarang", wilayahKerja: ["Provinsi Jawa Tengah", "Provinsi DI. Yogyakarta"] },
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Jawa Timur-Bali", lokasi: "Surabaya", wilayahKerja: ["Provinsi Jawa Timur", "Provinsi Bali"] },
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Sulawesi Selatan", lokasi: "Makassar", wilayahKerja: ["Provinsi Sulawesi Selatan"] },
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Kalimantan Timur", lokasi: "Balikpapan", wilayahKerja: ["Provinsi Kalimantan Timur"] },
+    ],
+  },
+  {
+    kode: "bm_bbpjn_b",
+    unorKode: "BM",
+    nama: "Balai Besar Pelaksanaan Jalan Nasional Tipe B",
+    balai: [
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Papua-Papua Pegunungan", lokasi: "Jayapura", wilayahKerja: ["Provinsi Papua", "Provinsi Papua Pegunungan"] },
+      { nama: "Balai Besar Pelaksanaan Jalan Nasional Papua Barat-Papua Barat Daya", lokasi: "Manokwari", wilayahKerja: ["Provinsi Papua Barat", "Provinsi Papua Barat Daya"] },
+    ],
+  },
+  {
+    kode: "bm_bpjn",
+    unorKode: "BM",
+    nama: "Balai Pelaksanaan Jalan Nasional",
+    balai: [
+      { nama: "Balai Pelaksanaan Jalan Nasional Aceh", lokasi: "Banda Aceh", wilayahKerja: ["Provinsi Aceh"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Riau", lokasi: "Pekanbaru", wilayahKerja: ["Provinsi Riau"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Kepulauan Riau", lokasi: "Batam", wilayahKerja: ["Provinsi Kepulauan Riau"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Sumatera Barat", lokasi: "Padang", wilayahKerja: ["Provinsi Sumatera Barat"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Jambi", lokasi: "Jambi", wilayahKerja: ["Provinsi Jambi"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Bengkulu", lokasi: "Bengkulu", wilayahKerja: ["Provinsi Bengkulu"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Bangka Belitung", lokasi: "Pangkal Pinang", wilayahKerja: ["Provinsi Bangka Belitung"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Lampung", lokasi: "Bandar Lampung", wilayahKerja: ["Provinsi Lampung"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Banten", lokasi: "Serang", wilayahKerja: ["Provinsi Banten"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Nusa Tenggara Barat", lokasi: "Mataram", wilayahKerja: ["Provinsi Nusa Tenggara Barat"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Nusa Tenggara Timur", lokasi: "Kupang", wilayahKerja: ["Provinsi Nusa Tenggara Timur"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Kalimantan Barat", lokasi: "Pontianak", wilayahKerja: ["Provinsi Kalimantan Barat"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Kalimantan Selatan", lokasi: "Banjarmasin", wilayahKerja: ["Provinsi Kalimantan Selatan"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Kalimantan Utara", lokasi: "Tanjung Selor", wilayahKerja: ["Provinsi Kalimantan Utara"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Kalimantan Tengah", lokasi: "Palangkaraya", wilayahKerja: ["Provinsi Kalimantan Tengah"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Sulawesi Utara", lokasi: "Manado", wilayahKerja: ["Provinsi Sulawesi Utara"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Gorontalo", lokasi: "Gorontalo", wilayahKerja: ["Provinsi Gorontalo"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Sulawesi Tengah", lokasi: "Palu", wilayahKerja: ["Provinsi Sulawesi Tengah"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Sulawesi Tenggara", lokasi: "Kendari", wilayahKerja: ["Provinsi Sulawesi Tenggara"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Sulawesi Barat", lokasi: "Mamuju", wilayahKerja: ["Provinsi Sulawesi Barat"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Maluku", lokasi: "Ambon", wilayahKerja: ["Provinsi Maluku"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Maluku Utara", lokasi: "Ternate", wilayahKerja: ["Provinsi Maluku Utara"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Papua Selatan", lokasi: "Merauke", wilayahKerja: ["Provinsi Papua Selatan"] },
+      { nama: "Balai Pelaksanaan Jalan Nasional Papua Tengah", lokasi: "Nabire", wilayahKerja: ["Provinsi Papua Tengah"] },
+    ],
+  },
+  {
+    kode: "bm_bpdpjt",
+    unorKode: "BM",
+    nama: "Balai Pengelolaan Dana Pengembangan Jalan Tol",
+    balai: [
+      { nama: "Balai Pengelolaan Dana Pengembangan Jalan Tol", lokasi: "Jakarta", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+    ],
+  },
+  {
+    kode: "bm_balai_teknik",
+    unorKode: "BM",
+    nama: "Balai Teknik",
+    balai: [
+      { nama: "Balai Bahan dan Perkerasan Jalan", lokasi: "Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Keamanan Jembatan dan Terowongan Khusus", lokasi: "Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Geoteknik, Terowongan, dan Struktur", lokasi: "Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Sistem Jaringan dan Lingkungan Jalan", lokasi: "Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+    ],
+  },
+  {
+    kode: "ck_bpbpk_1",
+    unorKode: "CK",
+    nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kelas I",
+    balai: [
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Aceh", lokasi: "Banda Aceh", wilayahKerja: ["Provinsi Aceh"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sumatera Utara", lokasi: "Medan", wilayahKerja: ["Provinsi Sumatera Utara"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Riau", lokasi: "Pekanbaru", wilayahKerja: ["Provinsi Riau"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kepulauan Riau", lokasi: "Tanjung Pinang", wilayahKerja: ["Provinsi Kepulauan Riau"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sumatera Barat", lokasi: "Padang", wilayahKerja: ["Provinsi Sumatera Barat"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sumatera Selatan", lokasi: "Palembang", wilayahKerja: ["Provinsi Sumatera Selatan"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Lampung", lokasi: "Bandar Lampung", wilayahKerja: ["Provinsi Lampung"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Banten", lokasi: "Serang", wilayahKerja: ["Provinsi Banten"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Jakarta Metropolitan", lokasi: "Jakarta", wilayahKerja: ["Provinsi DKI Jakarta"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Jawa Barat", lokasi: "Bandung", wilayahKerja: ["Provinsi Jawa Barat"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Jawa Tengah", lokasi: "Semarang", wilayahKerja: ["Provinsi Jawa Tengah"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan D.I. Yogyakarta", lokasi: "Yogyakarta", wilayahKerja: ["Provinsi D.I. Yogyakarta"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Jawa Timur", lokasi: "Surabaya", wilayahKerja: ["Provinsi Jawa Timur"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Bali", lokasi: "Denpasar", wilayahKerja: ["Provinsi Bali"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Nusa Tenggara Barat", lokasi: "Mataram", wilayahKerja: ["Provinsi Nusa Tenggara Barat"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Nusa Tenggara Timur", lokasi: "Kupang", wilayahKerja: ["Provinsi Nusa Tenggara Timur"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kalimantan Barat", lokasi: "Pontianak", wilayahKerja: ["Provinsi Kalimantan Barat"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kalimantan Selatan", lokasi: "Banjarmasin", wilayahKerja: ["Provinsi Kalimantan Selatan"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kalimantan Tengah", lokasi: "Palangkaraya", wilayahKerja: ["Provinsi Kalimantan Tengah"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kalimantan Timur", lokasi: "Samarinda", wilayahKerja: ["Provinsi Kalimantan Timur"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kalimantan Utara", lokasi: "Tanjung Selor", wilayahKerja: ["Provinsi Kalimantan Utara"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sulawesi Utara", lokasi: "Manado", wilayahKerja: ["Provinsi Sulawesi Utara"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sulawesi Tenggara", lokasi: "Kendari", wilayahKerja: ["Provinsi Sulawesi Tenggara"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sulawesi Tengah", lokasi: "Palu", wilayahKerja: ["Provinsi Sulawesi Tengah"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sulawesi Selatan", lokasi: "Makassar", wilayahKerja: ["Provinsi Sulawesi Selatan"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Papua", lokasi: "Jayapura", wilayahKerja: ["Provinsi Papua", "Provinsi Papua Tengah", "Provinsi Papua Pegunungan", "Provinsi Papua Selatan"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Papua Barat", lokasi: "Manokwari", wilayahKerja: ["Provinsi Papua Barat", "Provinsi Papua Barat Daya"] },
+    ],
+  },
+  {
+    kode: "ck_bpbpk_2",
+    unorKode: "CK",
+    nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kelas II",
+    balai: [
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Bengkulu", lokasi: "Bengkulu", wilayahKerja: ["Provinsi Bengkulu"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Kepulauan Bangka Belitung", lokasi: "Pangkal Pinang", wilayahKerja: ["Provinsi Kepulauan Bangka Belitung"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Jambi", lokasi: "Jambi", wilayahKerja: ["Provinsi Jambi"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Gorontalo", lokasi: "Gorontalo", wilayahKerja: ["Provinsi Gorontalo"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Sulawesi Barat", lokasi: "Mamuju", wilayahKerja: ["Provinsi Sulawesi Barat"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Maluku", lokasi: "Ambon", wilayahKerja: ["Provinsi Maluku"] },
+      { nama: "Balai Penataan Bangunan, Prasarana dan Kawasan Maluku Utara", lokasi: "Ternate", wilayahKerja: ["Provinsi Maluku Utara"] },
+    ],
+  },
+  {
+    kode: "ck_balai_teknik",
+    unorKode: "CK",
+    nama: "Balai Teknik",
+    balai: [
+      { nama: "Balai Teknik Air Minum", lokasi: "Bekasi", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Sanitasi", lokasi: "Surabaya", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Bahan dan Struktur Bangunan Gedung", lokasi: "Kabupaten Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Sains Bangunan", lokasi: "Kabupaten Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+      { nama: "Balai Teknik Tata Bangunan Gedung dan Lingkungan", lokasi: "Kabupaten Bandung", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+    ],
+  },
+  {
+    kode: "ps_bpps_1",
+    unorKode: "PS",
+    nama: "Balai Pelaksanaan Prasarana Strategis Kelas I",
+    balai: [
+      { nama: "Balai Pelaksanaan Prasarana Strategis Aceh", lokasi: "Aceh Besar", wilayahKerja: ["Provinsi Aceh"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sumatera Utara", lokasi: "Medan", wilayahKerja: ["Provinsi Sumatera Utara"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sumatera Barat", lokasi: "Padang", wilayahKerja: ["Provinsi Sumatera Barat"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Riau", lokasi: "Pekanbaru", wilayahKerja: ["Provinsi Riau"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sumatera Selatan", lokasi: "Palembang", wilayahKerja: ["Provinsi Sumatera Selatan"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Jawa Barat", lokasi: "Bandung", wilayahKerja: ["Provinsi Jawa Barat"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Jawa Tengah", lokasi: "Semarang", wilayahKerja: ["Provinsi Jawa Tengah"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Jawa Timur", lokasi: "Surabaya", wilayahKerja: ["Provinsi Jawa Timur"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Nusa Tenggara Timur", lokasi: "Kupang", wilayahKerja: ["Provinsi Nusa Tenggara Timur"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Kalimantan Barat", lokasi: "Pontianak", wilayahKerja: ["Provinsi Kalimantan Barat"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Kalimantan Selatan", lokasi: "Banjarbaru", wilayahKerja: ["Provinsi Kalimantan Selatan"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sulawesi Utara dan Gorontalo", lokasi: "Manado", wilayahKerja: ["Provinsi Sulawesi Utara", "Provinsi Gorontalo"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sulawesi Tengah", lokasi: "Palu", wilayahKerja: ["Provinsi Sulawesi Tengah"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sulawesi Selatan", lokasi: "Makassar", wilayahKerja: ["Provinsi Sulawesi Selatan"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Maluku", lokasi: "Ambon", wilayahKerja: ["Provinsi Maluku"] },
+    ],
+  },
+  {
+    kode: "ps_bpps_2",
+    unorKode: "PS",
+    nama: "Balai Pelaksanaan Prasarana Strategis Kelas II",
+    balai: [
+      { nama: "Balai Pelaksanaan Prasarana Strategis Kepulauan Riau", lokasi: "Tanjung Pinang", wilayahKerja: ["Provinsi Kepulauan Riau"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Jambi", lokasi: "Jambi", wilayahKerja: ["Provinsi Jambi"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Bengkulu", lokasi: "Bengkulu", wilayahKerja: ["Provinsi Bengkulu"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Kepulauan Bangka Belitung", lokasi: "Pangkal Pinang", wilayahKerja: ["Provinsi Kepulauan Bangka Belitung"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Lampung", lokasi: "Bandar Lampung", wilayahKerja: ["Provinsi Lampung"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis DKI Jakarta", lokasi: "Jakarta", wilayahKerja: ["Provinsi DKI Jakarta"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Banten", lokasi: "Serang", wilayahKerja: ["Provinsi Banten"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Daerah Istimewa Yogyakarta", lokasi: "Yogyakarta", wilayahKerja: ["Provinsi Daerah Istimewa Yogyakarta"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Bali", lokasi: "Denpasar", wilayahKerja: ["Provinsi Bali"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Nusa Tenggara Barat", lokasi: "Mataram", wilayahKerja: ["Provinsi Nusa Tenggara Barat"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Kalimantan Tengah", lokasi: "Palangkaraya", wilayahKerja: ["Provinsi Kalimantan Tengah"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Kalimantan Timur", lokasi: "Samarinda", wilayahKerja: ["Provinsi Kalimantan Timur"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Kalimantan Utara", lokasi: "Bulungan", wilayahKerja: ["Provinsi Kalimantan Utara"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sulawesi Tenggara", lokasi: "Kendari", wilayahKerja: ["Provinsi Sulawesi Tenggara"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Sulawesi Barat", lokasi: "Mamuju", wilayahKerja: ["Provinsi Sulawesi Barat"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Maluku Utara", lokasi: "Ternate", wilayahKerja: ["Provinsi Maluku Utara"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Papua", lokasi: "Jayapura", wilayahKerja: ["Provinsi Papua", "Provinsi Papua Tengah", "Provinsi Papua Pegunungan", "Provinsi Papua Selatan"] },
+      { nama: "Balai Pelaksanaan Prasarana Strategis Papua Barat", lokasi: "Manokwari", wilayahKerja: ["Provinsi Papua Barat", "Provinsi Papua Barat Daya"] },
+    ],
+  },
+  {
+    kode: "bk_bjk",
+    unorKode: "BK",
+    nama: "Balai Jasa Konstruksi",
+    balai: [
+      { nama: "Balai Jasa Konstruksi Wilayah I Aceh", lokasi: "Banda Aceh", wilayahKerja: ["Provinsi Sumatera Utara", "Provinsi Aceh", "Provinsi Riau", "Provinsi Kepulauan Riau", "Provinsi Sumatera Barat"] },
+      { nama: "Balai Jasa Konstruksi Wilayah II Palembang", lokasi: "Palembang", wilayahKerja: ["Provinsi Sumatera Selatan", "Provinsi Kep.Bangka Belitung", "Provinsi Jambi", "Provinsi Bengkulu", "Provinsi Lampung"] },
+      { nama: "Balai Jasa Konstruksi Wilayah III Jakarta", lokasi: "Jakarta", wilayahKerja: ["Provinsi DKI Jakarta", "Provinsi Banten", "Provinsi Jawa Barat"] },
+      { nama: "Balai Jasa Konstruksi Wilayah IV Surabaya", lokasi: "Surabaya", wilayahKerja: ["Provinsi DI Yogyakarta", "Provinsi Jawa Tengah", "Provinsi Jawa Timur", "Provinsi Bali", "Provinsi Nusa Tenggara Barat", "Provinsi Nusa Tenggara Timur"] },
+      { nama: "Balai Jasa Konstruksi Wilayah V Banjarmasin", lokasi: "Banjarmasin", wilayahKerja: ["Provinsi Kalimantan Selatan", "Provinsi Kalimantan Timur", "Provinsi Kalimantan Tengah", "Provinsi Kalimantan Barat", "Provinsi Kalimantan Utara"] },
+      { nama: "Balai Jasa Konstruksi Wilayah VI Makassar", lokasi: "Makassar", wilayahKerja: ["Provinsi Sulawesi Selatan", "Provinsi Sulawesi Utara", "Provinsi Sulawesi Barat", "Provinsi Sulawesi Tengah", "Provinsi Sulawesi Tenggara", "Provinsi Gorontalo"] },
+      { nama: "Balai Jasa Konstruksi Wilayah VII Jayapura", lokasi: "Jayapura", wilayahKerja: ["Provinsi Papua Barat", "Provinsi Papua Barat Daya", "Provinsi Papua", "Provinsi Papua Pegunungan", "Provinsi Papua Tengah", "Provinsi Papua Selatan", "Provinsi Maluku", "Provinsi Maluku Utara"] },
+    ],
+  },
+  {
+    kode: "bk_bp2jk_1",
+    unorKode: "BK",
+    nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Kelas I",
+    balai: [
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Aceh", lokasi: "Banda Aceh", wilayahKerja: ["Provinsi Aceh"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sumatera Utara", lokasi: "Medan", wilayahKerja: ["Provinsi Sumatera Utara"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sumatera Barat", lokasi: "Padang", wilayahKerja: ["Provinsi Sumatera Barat"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sumatera Selatan", lokasi: "Palembang", wilayahKerja: ["Provinsi Sumatera Selatan"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Jambi", lokasi: "Jambi", wilayahKerja: ["Provinsi Jambi"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Lampung", lokasi: "Bandar Lampung", wilayahKerja: ["Provinsi Lampung"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Banten", lokasi: "Serang", wilayahKerja: ["Provinsi Banten"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah DKI Jakarta", lokasi: "Jakarta", wilayahKerja: ["Provinsi DKI Jakarta"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Jawa Barat", lokasi: "Bandung", wilayahKerja: ["Provinsi Jawa Barat"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah D.I. Yogyakarta", lokasi: "Yogyakarta", wilayahKerja: ["Provinsi D.I. Yogyakarta"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Jawa Tengah", lokasi: "Semarang", wilayahKerja: ["Provinsi Jawa Tengah"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Jawa Timur", lokasi: "Surabaya", wilayahKerja: ["Provinsi Jawa Timur"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Bali", lokasi: "Denpasar", wilayahKerja: ["Provinsi Bali"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Nusa Tenggara Timur", lokasi: "Kupang", wilayahKerja: ["Provinsi Nusa Tenggara Timur"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Nusa Tenggara Barat", lokasi: "Mataram", wilayahKerja: ["Provinsi Nusa Tenggara Barat"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Kalimantan Barat", lokasi: "Pontianak", wilayahKerja: ["Provinsi Kalimantan Barat"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Kalimantan Selatan", lokasi: "Banjarmasin", wilayahKerja: ["Provinsi Kalimantan Selatan"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Kalimantan Tengah", lokasi: "Palangkaraya", wilayahKerja: ["Provinsi Kalimantan Tengah"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Kalimantan Timur", lokasi: "Samarinda", wilayahKerja: ["Provinsi Kalimantan Timur"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Kalimantan Utara", lokasi: "Tarakan", wilayahKerja: ["Provinsi Kalimantan Utara"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sulawesi Utara", lokasi: "Manado", wilayahKerja: ["Provinsi Sulawesi Utara"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sulawesi Tenggara", lokasi: "Kendari", wilayahKerja: ["Provinsi Sulawesi Tenggara"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sulawesi Tengah", lokasi: "Palu", wilayahKerja: ["Provinsi Sulawesi Tengah"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sulawesi Selatan", lokasi: "Makassar", wilayahKerja: ["Provinsi Sulawesi Selatan"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Papua", lokasi: "Jayapura", wilayahKerja: ["Provinsi Papua", "Provinsi Papua Tengah", "Provinsi Papua Pegunungan", "Provinsi Papua Selatan"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Papua Barat", lokasi: "Manokwari", wilayahKerja: ["Provinsi Papua Barat", "Provinsi Papua Barat Daya"] },
+    ],
+  },
+  {
+    kode: "bk_bp2jk_2",
+    unorKode: "BK",
+    nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Kelas II",
+    balai: [
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Riau", lokasi: "Pekanbaru", wilayahKerja: ["Provinsi Riau"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Kepulauan Riau", lokasi: "Batam", wilayahKerja: ["Provinsi Kepulauan Riau"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Bengkulu", lokasi: "Bengkulu", wilayahKerja: ["Provinsi Bengkulu"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Bangka Belitung", lokasi: "Pangkal Pinang", wilayahKerja: ["Provinsi Bangka Belitung"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Gorontalo", lokasi: "Gorontalo", wilayahKerja: ["Provinsi Gorontalo"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Sulawesi Barat", lokasi: "Mamuju", wilayahKerja: ["Provinsi Sulawesi Barat"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Maluku", lokasi: "Ambon", wilayahKerja: ["Provinsi Maluku"] },
+      { nama: "Balai Pelaksana Pemilihan Jasa Konstruksi Wilayah Maluku Utara", lokasi: "Ternate", wilayahKerja: ["Provinsi Maluku Utara"] },
+    ],
+  },
+  {
+    kode: "bpsdm_bpk_pu",
+    unorKode: "BPSDM",
+    nama: "Balai Pengembangan Kompetensi Pekerjaan Umum",
+    balai: [
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah I Medan", lokasi: "Medan", wilayahKerja: ["Provinsi Sumatera Utara", "Provinsi Aceh", "Provinsi Riau", "Provinsi Kepulauan Riau", "Provinsi Sumatera Barat"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah II Palembang", lokasi: "Palembang", wilayahKerja: ["Provinsi Sumatera Selatan", "Provinsi Kep. Bangka Belitung", "Provinsi Jambi", "Provinsi Bengkulu", "Provinsi Lampung"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah III Jakarta", lokasi: "Jakarta", wilayahKerja: ["Provinsi DKI Jakarta", "Kota Bogor", "Kota Depok", "Kota dan Kabupaten Bekasi", "Kota dan Kabupaten Tangerang", "Kota Tangerang Selatan"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah IV Bandung", lokasi: "Bandung", wilayahKerja: ["Provinsi Jawa Barat (selain Kota Bogor, Kota Depok, Kota dan Kabupaten Bekasi)", "Provinsi Banten (selain Kota Tangerang, Kabupaten Tangerang, Kota Tangerang Selatan)"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah V Yogyakarta", lokasi: "Yogyakarta", wilayahKerja: ["Provinsi DI Yogyakarta", "Provinsi Jawa Tengah", "Kabupaten Ponorogo", "Kabupaten Pacitan"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah VI Surabaya", lokasi: "Surabaya", wilayahKerja: ["Provinsi Jawa Timur (selain Kabupaten Ponorogo dan Kabupaten Pacitan)", "Provinsi Bali", "Provinsi Nusa Tenggara Barat", "Provinsi Nusa Tenggara Timur"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah VII Banjarmasin", lokasi: "Banjarmasin", wilayahKerja: ["Provinsi Kalimantan Selatan", "Provinsi Kalimantan Timur", "Provinsi Kalimantan Tengah", "Provinsi Kalimantan Barat", "Provinsi Kalimantan Utara"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah VIII Makassar", lokasi: "Makassar", wilayahKerja: ["Provinsi Sulawesi Selatan", "Provinsi Sulawesi Utara", "Provinsi Sulawesi Barat", "Provinsi Sulawesi Tengah", "Provinsi Sulawesi Tenggara", "Provinsi Gorontalo", "Provinsi Maluku Utara"] },
+      { nama: "Balai Pengembangan Kompetensi Pekerjaan Umum Wilayah IX Jayapura", lokasi: "Jayapura", wilayahKerja: ["Provinsi Papua", "Provinsi Papua Pegunungan", "Provinsi Papua Selatan", "Provinsi Papua Barat", "Provinsi Papua Barat Daya", "Provinsi Papua Tengah", "Provinsi Maluku"] },
+    ],
+  },
+  {
+    kode: "bpsdm_bpk",
+    unorKode: "BPSDM",
+    nama: "Balai Penilaian Kompetensi",
+    balai: [
+      { nama: "Balai Penilaian Kompetensi", lokasi: "Jakarta", wilayahKerja: ["Seluruh Wilayah Indonesia"] },
+    ],
+  },
+];
+
+// Unit organisasi eselon I yang memiliki UPT. SETJEN, PIPU, ITJEN, dan BPIW
+// tidak punya UPT sama sekali, jadi tidak boleh muncul pada alur SOP UPT.
+export const UNOR_BER_UPT = UPT_KLASIFIKASI.reduce(
+  (acc, k) => (acc.includes(k.unorKode) ? acc : [...acc, k.unorKode]),
+  [],
+);
+
+export const UPT_KLASIFIKASI_BY_UNOR = UPT_KLASIFIKASI.reduce((acc, k) => {
+  acc[k.unorKode] = [...(acc[k.unorKode] ?? []), k];
+  return acc;
+}, {});
+
+export const UPT_KLASIFIKASI_BY_KODE = Object.fromEntries(UPT_KLASIFIKASI.map((k) => [k.kode, k]));
+
+// Pencarian balik dari nama balai yang tersimpan di usulan.unitTerdampak.
+export const UPT_BALAI_BY_NAMA = Object.fromEntries(
+  UPT_KLASIFIKASI.flatMap((k) =>
+    k.balai.map((b) => [
+      b.nama,
+      { ...b, klasifikasiKode: k.kode, klasifikasiNama: k.nama, unorKode: k.unorKode },
+    ]),
+  ),
+);

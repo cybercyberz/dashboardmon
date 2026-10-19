@@ -12,6 +12,7 @@ import {
   FASE_BY_KODE,
   DOKUMEN_JENIS_LIST,
 } from "./sop.js";
+import { UNOR_BER_UPT, UPT_BALAI_BY_NAMA, UPT_KLASIFIKASI_BY_UNOR } from "./upt.js";
 
 // =====================================================================
 // KONSTANTA UNIT ORGANISASI (Permen PU 1/2024)
@@ -1731,6 +1732,106 @@ function EselonIIMultiSelect({ eselonIKode, selected, onChange }) {
   );
 }
 
+// Pemilih UPT terdampak untuk alur SOP UPT: klasifikasi (tipe/kelas) dahulu,
+// lalu nama balai menurut Lampiran Permen PU 17/2026. Balai terpilih tetap
+// tampil sebagai chip supaya pilihan lintas klasifikasi tidak terlihat hilang
+// saat klasifikasi diganti.
+function UptTerdampakPicker({ unorKode, selected, onChange }) {
+  const [klasifikasiKode, setKlasifikasiKode] = useState("");
+  const [cari, setCari] = useState("");
+
+  const klasifikasiList = UPT_KLASIFIKASI_BY_UNOR[unorKode] ?? [];
+  const klasifikasi = klasifikasiList.find((k) => k.kode === klasifikasiKode) ?? null;
+  const kataCari = cari.trim().toLowerCase();
+  const balaiTampil = (klasifikasi?.balai ?? []).filter(
+    (b) => !kataCari || [b.nama, b.lokasi, ...b.wilayahKerja].some((t) => t.toLowerCase().includes(kataCari)),
+  );
+
+  const toggle = (nama) => {
+    if (selected.includes(nama)) onChange(selected.filter((s) => s !== nama));
+    else onChange([...selected, nama]);
+  };
+
+  if (!unorKode) {
+    return <div className="text-sm text-slate-500 dark:text-slate-400">Pilih unit organisasi eselon I terlebih dahulu.</div>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map((nama) => (
+            <span
+              key={nama}
+              className={`inline-flex max-w-full items-start gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_TONE.blue.pill}`}
+            >
+              <span className="min-w-0">{nama}</span>
+              <button
+                type="button"
+                aria-label={`Hapus ${nama}`}
+                className={`shrink-0 leading-none hover:text-blue-950 dark:hover:text-blue-100 ${FOCUS_RING}`}
+                onClick={() => toggle(nama)}
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <Select
+        aria-label="Klasifikasi UPT"
+        value={klasifikasiKode}
+        onChange={(e) => {
+          setKlasifikasiKode(e.target.value);
+          setCari("");
+        }}
+      >
+        <option value="">Pilih klasifikasi UPT</option>
+        {klasifikasiList.map((k) => (
+          <option key={k.kode} value={k.kode}>
+            {k.nama} ({k.balai.length} balai)
+          </option>
+        ))}
+      </Select>
+      {!klasifikasi ? (
+        <div className="text-sm text-slate-500 dark:text-slate-400">Pilih klasifikasi UPT terlebih dahulu.</div>
+      ) : (
+        <>
+          <Input
+            type="search"
+            aria-label="Cari nama balai, lokasi, atau wilayah kerja"
+            placeholder="Cari nama balai, lokasi, atau wilayah kerja"
+            value={cari}
+            onChange={(e) => setCari(e.target.value)}
+          />
+          <div className="max-h-64 space-y-1.5 overflow-y-auto rounded border border-slate-300 p-2 dark:border-slate-600">
+            {balaiTampil.length === 0 ? (
+              <div className="px-1 py-2 text-sm text-slate-500 dark:text-slate-400">Tidak ada balai yang cocok.</div>
+            ) : (
+              balaiTampil.map((b) => (
+                <label key={b.nama} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={selected.includes(b.nama)}
+                    onChange={() => toggle(b.nama)}
+                  />
+                  <span className="min-w-0">
+                    <span className="font-medium">{b.nama}</span>
+                    <span className="block text-xs text-slate-500 dark:text-slate-400">
+                      {b.lokasi} &middot; {b.wilayahKerja.join(", ")}
+                    </span>
+                  </span>
+                </label>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function RoleSwitcher({ role, onChange }) {
   return (
     <select
@@ -2182,14 +2283,26 @@ function DetailUsulanPage({
       )}
 
       <Card className="p-4">
-        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">Jenis Perubahan &amp; Unit Eselon II Terdampak</h3>
+        <h3 className="mb-2 text-base font-semibold text-slate-800 dark:text-slate-100">
+          Jenis Perubahan &amp; {usulan.sopKode === "upt" ? "UPT Terdampak" : "Unit Eselon II Terdampak"}
+        </h3>
         <div className="mb-2">
           <Pill color="gray">{JENIS_PERUBAHAN_LABEL[usulan.jenisPerubahan]}</Pill>
         </div>
-        <ul className="list-inside list-disc text-sm text-slate-700 dark:text-slate-300">
-          {usulan.unitTerdampak.map((unit) => (
-            <li key={unit}>{unit}</li>
-          ))}
+        <ul className="ml-5 list-disc space-y-1 text-sm text-slate-700 dark:text-slate-300">
+          {usulan.unitTerdampak.map((unit) => {
+            const balai = UPT_BALAI_BY_NAMA[unit];
+            return (
+              <li key={unit}>
+                {unit}
+                {balai && (
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">
+                    {balai.klasifikasiNama} &middot; {balai.lokasi} &middot; {balai.wilayahKerja.join(", ")}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </Card>
 
@@ -2240,12 +2353,29 @@ function TambahUsulanForm({ onAddUsulan }) {
   const [feedback, setFeedback] = useState(null);
 
   const sop = SOP_BY_KODE[sopKode];
+  const isUpt = sopKode === "upt";
+  const unorOptions = isUpt ? UNIT_ORGANISASI.filter((u) => UNOR_BER_UPT.includes(u.kode)) : UNIT_ORGANISASI;
+
+  // Daftar unit terdampak alur UPT (nama balai) tidak sepadan dengan daftar alur
+  // lain (nama unit eselon II), jadi berpindah antara keduanya mengosongkan
+  // pilihan - termasuk unit organisasi yang ternyata tidak memiliki UPT.
+  const gantiSop = (kode) => {
+    const jadiUpt = kode === "upt";
+    if (jadiUpt !== isUpt) setUnitTerdampak([]);
+    if (jadiUpt && !UNOR_BER_UPT.includes(unorKode)) setUnorKode("");
+    setSopKode(kode);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
     if (!judul.trim() || !unorKode || unitTerdampak.length === 0) {
-      setFeedback({ type: "error", text: "Judul, unit organisasi, dan minimal satu unit terdampak wajib diisi." });
+      setFeedback({
+        type: "error",
+        text: isUpt
+          ? "Judul, unit organisasi, dan minimal satu UPT terdampak wajib diisi."
+          : "Judul, unit organisasi, dan minimal satu unit terdampak wajib diisi.",
+      });
       return;
     }
     const result = await onAddUsulan({
@@ -2275,7 +2405,7 @@ function TambahUsulanForm({ onAddUsulan }) {
         <Input id="tambah-judul" type="text" value={judul} onChange={(e) => setJudul(e.target.value)} />
       </FormField>
       <FormField id="tambah-sop" label="Alur SOP">
-        <Select id="tambah-sop" value={sopKode} onChange={(e) => setSopKode(e.target.value)}>
+        <Select id="tambah-sop" value={sopKode} onChange={(e) => gantiSop(e.target.value)}>
           {SOP_LIST.map((s) => (
             <option key={s.kode} value={s.kode}>
               {s.labelPendek}: {s.label}
@@ -2310,17 +2440,28 @@ function TambahUsulanForm({ onAddUsulan }) {
           }}
         >
           <option value="">Pilih unit organisasi</option>
-          {UNIT_ORGANISASI.map((u) => (
+          {unorOptions.map((u) => (
             <option key={u.kode} value={u.kode}>
               {u.kode}: {u.nama}
             </option>
           ))}
         </Select>
+        {isUpt && (
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Hanya unit organisasi yang memiliki UPT yang ditampilkan: {unorOptions.map((u) => u.kode).join(", ")}.
+          </div>
+        )}
       </FormField>
       <fieldset className="min-w-0 border-0 p-0 m-0">
-        <legend className="block text-xs font-medium text-slate-500 dark:text-slate-400">Unit Eselon II Terdampak</legend>
+        <legend className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+          {isUpt ? "UPT Terdampak" : "Unit Eselon II Terdampak"}
+        </legend>
         <div className="mt-1">
-          <EselonIIMultiSelect eselonIKode={unorKode} selected={unitTerdampak} onChange={setUnitTerdampak} />
+          {isUpt ? (
+            <UptTerdampakPicker unorKode={unorKode} selected={unitTerdampak} onChange={setUnitTerdampak} />
+          ) : (
+            <EselonIIMultiSelect eselonIKode={unorKode} selected={unitTerdampak} onChange={setUnitTerdampak} />
+          )}
         </div>
       </fieldset>
       <FormField id="tambah-jenis" label="Jenis Perubahan">
