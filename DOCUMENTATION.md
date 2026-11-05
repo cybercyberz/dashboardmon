@@ -4,11 +4,11 @@ Full technical reference for **DashboardMon** (`dashboardmon-biro-kotl`): what i
 
 ## 1. Overview
 
-DashboardMon tracks *usulan perubahan organisasi* (organizational-change proposals) inside an Indonesian government ministry, as they move through review at the ministry's internal bureau (Biro KOTL), joint review with the Ministry of State Apparatus Reform (PANRB), legal harmonization with the Ministry of Law and Human Rights (KUMHAM), and final enactment.
+DashboardMon tracks *usulan perubahan organisasi* (organizational-change proposals) inside an Indonesian government ministry, as they move through review at the ministry's internal bureau (BKO), joint review with the Ministry of State Apparatus Reform (PANRB), legal harmonization with the Ministry of Law and Human Rights (KUMHAM), and final enactment.
 
-Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01.CFM.01.SOP.01-04, effective October 2026, scanned PDFs in the repo root), transcribed step-by-step into `src/sop.js`: **otk** (Penataan OTK Kementerian, 22 steps), **upt** (Penataan Organisasi UPT, 25 steps), **lns** (Penataan LNS, 11 steps), **opd** (Fasilitasi Pemetaan OPD, 16 steps), plus **non_sop** for items outside any SOP (e.g. IPKK) which have no step flow. A proposal can be sent back at decision steps any number of times (each cycle is a "round" / *putaran*), every step change is logged, and dated progress notes (*catatan progres* - the modernized replacement of the old Excel monthly sheets) record narrative progress and follow-ups.
+Each proposal follows one of four official SOP workflows of BKO (BKO-03.01.CFM.01.SOP.01-04, effective October 2026, scanned PDFs in the repo root), transcribed step-by-step into `src/sop.js`: **otk** (Penataan OTK Kementerian, 22 steps), **upt** (Penataan Organisasi UPT, 25 steps), **lns** (Penataan LNS, 11 steps), **opd** (Fasilitasi Pemetaan OPD, 16 steps), plus **non_sop** for items outside any SOP (e.g. IPKK) which have no step flow. A proposal can be sent back at decision steps any number of times (each cycle is a "round" / *putaran*), every step change is logged, and dated progress notes (*catatan progres* - the modernized replacement of the old Excel monthly sheets) record narrative progress and follow-ups.
 
-**Audience:** Biro KOTL bureau staff (who process proposals) and the proposing units themselves (who can check status).
+**Audience:** BKO bureau staff (who process proposals) and the proposing units themselves (who can check status).
 
 **Current state:** open access - there is no login. Anyone with the URL can read and write data. See [§10 Known limitations](#10-known-limitations--gotchas).
 
@@ -31,8 +31,8 @@ Each proposal follows one of four official SOP workflows of Biro KOTL (BKO-03.01
 
 | Role code | Label | Can do |
 |---|---|---|
-| `kepala_biro` | Kepala Biro KOTL | Default role. Read-mostly view. |
-| `pelaksana_biro` | Pelaksana Biro KOTL | Only role that can see intake forms (`/formulir`), transition stages, bypass-transition, edit timeline dates, delete/restore proposals (`/recycle-bin`). |
+| `kepala_biro` | Kepala BKO | Default role. Read-mostly view. |
+| `pelaksana_biro` | Pelaksana BKO | Only role that can see intake forms (`/formulir`), transition stages, bypass-transition, edit timeline dates, delete/restore proposals (`/recycle-bin`). |
 | `unor` | Unit Organisasi Pengusul | View scoped to only its own unit's proposals, via a unit picker. |
 
 ### Stage transitions
@@ -143,6 +143,8 @@ Content-Type: application/json
 {"query": "<contents of schema.sql or seed.sql>"}
 ```
 This is how it was applied in practice - the PostgREST anon/service keys in `.env.local` cannot run arbitrary DDL; only a Postgres direct connection or a Management API token can.
+
+**Current tracking data:** `supabase/isi-tracking-excel.sql` holds the live on-going list as transcribed from the monitoring workbook "List On Going Kelembagaan.xlsx" (sheets Progress April, Mei, Agustus, September, Oktober plus Kelengkapan April and Mei): 20 proposals `PIPU-2026-023` through `SETJEN-2026-042` in their October 2026 state, 82 dated progress notes spanning April to October, and 40 document-checklist rows. It is additive on top of `seed.sql`: the earlier seed rows `001` to `020` stay soft-deleted in the recycle bin, and the two of them that were still active are soft-deleted by the script. Re-running it is safe - the 20 proposals are upserted and their notes and documents are deleted first - and it ends with `setval('public.usulan_seq', 42)`. Step numbers, `posisi_bola`, `putaran`, and status are a best-effort reading of each sheet's PROGRESS column and can be corrected through the UI; the `logs` table is deliberately left empty for these rows because the workbook records no step transitions.
 
 ## 6. Environment variables
 

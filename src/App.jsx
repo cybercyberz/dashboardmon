@@ -204,8 +204,8 @@ const STATUS_VALIDASI_LIST = [
 const STATUS_VALIDASI_BY_KODE = Object.fromEntries(STATUS_VALIDASI_LIST.map((s) => [s.kode, s]));
 
 const ROLES = [
-  { kode: "kepala_biro", label: "Kepala Biro KOTL" },
-  { kode: "pelaksana_biro", label: "Pelaksana Biro KOTL" },
+  { kode: "kepala_biro", label: "Kepala BKO" },
+  { kode: "pelaksana_biro", label: "Pelaksana BKO" },
   { kode: "unor", label: "Unit Organisasi Pengusul" },
 ];
 const ROLE_LABEL = Object.fromEntries(ROLES.map((r) => [r.kode, r.label]));
