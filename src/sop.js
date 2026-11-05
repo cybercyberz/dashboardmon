@@ -1,5 +1,5 @@
 // =====================================================================
-// DATA SOP PENATAAN KELEMBAGAAN - sumber: PDF SOP Biro KOTL
+// DATA SOP PENATAAN KELEMBAGAAN - sumber: PDF SOP BKO
 // BKO-03.01.CFM.01.SOP.01 s.d. SOP.04 (efektif Oktober 2026).
 // File ini data murni (tanpa React, tanpa logic): daftar pelaksana (lane),
 // fase agregasi dashboard, dan langkah tiap SOP. Legalitas transisi tetap
@@ -18,7 +18,7 @@
 export const PELAKSANA_LIST = [
   { kode: "UNOR", label: "Unit Organisasi Pengusul", color: "amber" },
   { kode: "SETJEN", label: "Sekretaris Jenderal", color: "sky" },
-  { kode: "BKO", label: "Biro KOTL", color: "blue" },
+  { kode: "BKO", label: "BKO", color: "blue" },
   { kode: "MENTERI", label: "Menteri PU", color: "indigo" },
   { kode: "PANRB", label: "Kementerian PANRB", color: "purple" },
   { kode: "BIRO_HUKUM", label: "Biro Hukum", color: "rose" },
